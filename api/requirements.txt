@@ -5,3 +5,4 @@ pydantic-settings>=2.0
 litellm
 youtube-transcript-api
 yt-dlp
+httpx

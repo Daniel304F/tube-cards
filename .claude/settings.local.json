@@ -11,7 +11,11 @@
       "Bash(mkdir -p api components config constants context hooks layouts lib pages)",
       "Bash(npm run:*)",
       "Bash(rm:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Read(//c/Users/Danie/.claude/**)",
+      "Bash(grep -r \"senior\" /c/Users/Danie/.claude/settings*.json D:/Projekte/tube-cards/.claude/settings*.json)",
+      "Bash(node -e \"const lr = require\\('lucide-react'\\); const yt = Object.keys\\(lr\\).filter\\(k => k.toLowerCase\\(\\).includes\\('youtube'\\)\\); console.log\\(yt\\)\")",
+      "Bash(node -e \"const lr = require\\('lucide-react'\\); const yt = Object.keys\\(lr\\).filter\\(k => k.toLowerCase\\(\\).includes\\('video'\\) || k.toLowerCase\\(\\).includes\\('play'\\)\\); console.log\\(yt.slice\\(0,15\\)\\)\")"
     ]
   }
 }

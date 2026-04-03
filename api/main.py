@@ -6,7 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel
 
 from database import engine
-from routers import videos, flashcards, summaries, folders, config
+import models  # noqa: F401 — ensure all tables are registered for create_all
+from routers import videos, flashcards, summaries, folders, config, exports
 
 
 @asynccontextmanager
@@ -29,3 +30,4 @@ app.include_router(flashcards.router)
 app.include_router(summaries.router)
 app.include_router(folders.router)
 app.include_router(config.router)
+app.include_router(exports.router)

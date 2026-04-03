@@ -1,18 +1,8 @@
 import { useLocation, Link } from "react-router-dom";
-import { Plus, Clock, Folder, Settings, type LucideIcon } from "lucide-react";
+import { NAV_ITEMS } from "../../constants/navigation";
 
-interface NavItem {
-  to: string;
-  icon: LucideIcon;
-  label: string;
-}
-
-const NAV_ITEMS: NavItem[] = [
-  { to: "/process", icon: Plus, label: "New" },
-  { to: "/history", icon: Clock, label: "History" },
-  { to: "/folders", icon: Folder, label: "Folders" },
-  { to: "/config", icon: Settings, label: "Config" },
-];
+// BottomNav shows only the main 4 items (skip Home)
+const BOTTOM_NAV_ITEMS = NAV_ITEMS.filter((item) => item.to !== "/");
 
 export function BottomNav(): React.JSX.Element {
   const { pathname } = useLocation();
@@ -27,8 +17,8 @@ export function BottomNav(): React.JSX.Element {
       "
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      {NAV_ITEMS.map(({ to, icon: Icon, label }) => {
-        const isActive = pathname === to;
+      {BOTTOM_NAV_ITEMS.map(({ to, icon: Icon, label }) => {
+        const isActive = pathname.startsWith(to);
         return (
           <Link
             key={to}
