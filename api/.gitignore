@@ -1,0 +1,9 @@
+CLAUDE.md
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+data/app.db
+*.egg-info/
+.venv/

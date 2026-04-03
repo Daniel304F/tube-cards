@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(cp -r client-temp/* client/)",
+      "Bash(cp client-temp/.gitignore client/.gitignore.vite)",
+      "Bash(rm -rf client-temp)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(rm App.css App.jsx)",
+      "Bash(mkdir -p api components config constants context hooks layouts lib pages)",
+      "Bash(npm run:*)"
+    ]
+  }
+}
