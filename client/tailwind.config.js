@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
@@ -16,6 +17,15 @@ export default {
           muted: "hsl(149, 8%, 52%)",
         },
         border: "hsl(149, 15%, 88%)",
+        // Dark mode tokens
+        dark: {
+          bg: "hsl(150, 10%, 10%)",
+          card: "hsl(150, 8%, 14%)",
+          surface: "hsl(150, 8%, 18%)",
+          border: "hsl(150, 6%, 24%)",
+          text: "hsl(150, 10%, 90%)",
+          muted: "hsl(150, 6%, 55%)",
+        },
       },
     },
   },

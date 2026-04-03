@@ -91,11 +91,11 @@ function ConfigSkeleton(): React.JSX.Element {
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className="rounded-lg border border-border bg-white p-6 animate-pulse"
+          className="rounded-lg border border-border dark:border-dark-border bg-white dark:bg-dark-card p-6 animate-pulse"
         >
-          <div className="h-5 w-32 rounded bg-border mb-2" />
-          <div className="h-4 w-64 rounded bg-border mb-4" />
-          <div className="h-10 w-full rounded bg-border" />
+          <div className="h-5 w-32 rounded bg-border dark:bg-dark-surface mb-2" />
+          <div className="h-4 w-64 rounded bg-border dark:bg-dark-surface mb-4" />
+          <div className="h-10 w-full rounded bg-border dark:bg-dark-surface" />
         </div>
       ))}
     </div>
@@ -129,10 +129,10 @@ function SecretInput({ value, onChange, placeholder, id }: SecretInputProps): Re
         onFocus={handleFocus}
         placeholder={placeholder}
         className="
-          w-full rounded-lg border border-border bg-white
+          w-full rounded-lg border border-border dark:border-dark-border bg-white dark:bg-dark-card
           px-3 py-2 pr-10
-          text-sm text-text-base
-          placeholder:text-text-muted
+          text-sm text-text-base dark:text-dark-text
+          placeholder:text-text-muted dark:placeholder:text-dark-muted
           transition-colors
           focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand
         "
@@ -142,8 +142,8 @@ function SecretInput({ value, onChange, placeholder, id }: SecretInputProps): Re
         onClick={() => setIsVisible((prev) => !prev)}
         className="
           absolute right-2 top-1/2 -translate-y-1/2
-          p-1 text-text-muted
-          hover:text-text-base
+          p-1 text-text-muted dark:text-dark-muted
+          hover:text-text-base dark:hover:text-dark-text
           transition-colors
         "
         aria-label={isVisible ? "Hide value" : "Show value"}
@@ -180,7 +180,7 @@ export default function ConfigPage(): React.JSX.Element {
   if (isLoading) {
     return (
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-text-base mb-6">Configuration</h1>
+        <h1 className="text-2xl font-bold text-text-base dark:text-dark-text mb-6">Configuration</h1>
         <ConfigSkeleton />
       </div>
     );
@@ -189,8 +189,8 @@ export default function ConfigPage(): React.JSX.Element {
   if (error && !config) {
     return (
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-text-base mb-6">Configuration</h1>
-        <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <h1 className="text-2xl font-bold text-text-base dark:text-dark-text mb-6">Configuration</h1>
+        <div className="flex items-center gap-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 p-4 text-sm text-red-700 dark:text-red-400">
           <AlertCircle className="size-5 shrink-0" />
           <p>{error}</p>
         </div>
@@ -200,18 +200,18 @@ export default function ConfigPage(): React.JSX.Element {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-text-base mb-6">Configuration</h1>
+      <h1 className="text-2xl font-bold text-text-base dark:text-dark-text mb-6">Configuration</h1>
 
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
         {SECTIONS.map((section) => (
           <fieldset
             key={section.title}
-            className="rounded-lg border border-border bg-white p-6"
+            className="rounded-lg border border-border dark:border-dark-border bg-white dark:bg-dark-card p-6"
           >
-            <legend className="text-base font-semibold text-text-base px-1">
+            <legend className="text-base font-semibold text-text-base dark:text-dark-text px-1">
               {section.title}
             </legend>
-            <p className="text-sm text-text-muted mb-4">{section.description}</p>
+            <p className="text-sm text-text-muted dark:text-dark-muted mb-4">{section.description}</p>
 
             <div className="space-y-4">
               {section.fields.map((field) => {
@@ -220,7 +220,7 @@ export default function ConfigPage(): React.JSX.Element {
                   <div key={field.key}>
                     <label
                       htmlFor={field.key}
-                      className="block text-sm font-medium text-text-base mb-1"
+                      className="block text-sm font-medium text-text-base dark:text-dark-text mb-1"
                     >
                       {field.label}
                     </label>
@@ -239,10 +239,10 @@ export default function ConfigPage(): React.JSX.Element {
                         onChange={(e) => handleChange(field.key, e.target.value)}
                         placeholder={field.placeholder}
                         className="
-                          w-full rounded-lg border border-border bg-white
+                          w-full rounded-lg border border-border dark:border-dark-border bg-white dark:bg-dark-card
                           px-3 py-2
-                          text-sm text-text-base
-                          placeholder:text-text-muted
+                          text-sm text-text-base dark:text-dark-text
+                          placeholder:text-text-muted dark:placeholder:text-dark-muted
                           transition-colors
                           focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand
                         "
@@ -256,14 +256,14 @@ export default function ConfigPage(): React.JSX.Element {
         ))}
 
         {error && (
-          <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div className="flex items-center gap-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 p-4 text-sm text-red-700 dark:text-red-400">
             <AlertCircle className="size-5 shrink-0" />
             <p>{error}</p>
           </div>
         )}
 
         {saveSuccess && !dirty && (
-          <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+          <div className="flex items-center gap-3 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950 p-4 text-sm text-green-700 dark:text-green-400">
             <CheckCircle className="size-5 shrink-0" />
             <p>Configuration saved successfully.</p>
           </div>
@@ -278,7 +278,7 @@ export default function ConfigPage(): React.JSX.Element {
             text-sm font-medium text-white
             transition-colors
             hover:bg-brand-dark
-            focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2
+            focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 dark:focus:ring-offset-dark-bg
             disabled:opacity-50 disabled:cursor-not-allowed
           "
         >

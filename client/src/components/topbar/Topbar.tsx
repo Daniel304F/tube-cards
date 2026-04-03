@@ -19,10 +19,11 @@ export function Topbar(): React.JSX.Element {
     <header className="
       flex items-center
       h-14 px-6
-      bg-white border-b border-border
+      bg-white dark:bg-dark-card
+      border-b border-border dark:border-dark-border
       shrink-0
     ">
-      <h1 className="text-lg font-semibold text-text-base">{title}</h1>
+      <h1 className="text-lg font-semibold text-text-base dark:text-dark-text">{title}</h1>
     </header>
   );
 }

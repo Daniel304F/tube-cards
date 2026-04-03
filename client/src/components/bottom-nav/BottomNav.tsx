@@ -12,7 +12,7 @@ export function BottomNav(): React.JSX.Element {
       className="
         fixed bottom-0 left-0 right-0
         flex items-center justify-around
-        bg-white border-t border-border
+        bg-white dark:bg-dark-card border-t border-border dark:border-dark-border
         h-16
       "
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -27,7 +27,7 @@ export function BottomNav(): React.JSX.Element {
               flex flex-col items-center gap-1
               min-w-[44px] min-h-[44px] justify-center
               transition-colors
-              ${isActive ? "text-brand" : "text-text-muted hover:text-text-base"}
+              ${isActive ? "text-brand" : "text-text-muted dark:text-dark-muted hover:text-text-base dark:hover:text-dark-text"}
             `}
           >
             <Icon className="size-5" />

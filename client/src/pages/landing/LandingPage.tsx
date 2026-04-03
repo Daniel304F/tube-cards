@@ -24,15 +24,15 @@ interface FeatureCardProps {
 function FeatureCard({ icon, title, description }: FeatureCardProps): React.JSX.Element {
   return (
     <div className="
-      rounded-lg border border-border bg-white
+      rounded-lg border border-border dark:border-dark-border bg-white dark:bg-dark-card
       p-5
       transition-shadow hover:shadow-md
     ">
-      <div className="inline-flex items-center justify-center size-10 rounded-lg bg-brand-surface mb-3">
+      <div className="inline-flex items-center justify-center size-10 rounded-lg bg-brand-surface dark:bg-dark-surface mb-3">
         {icon}
       </div>
-      <h3 className="text-sm font-semibold text-text-base mb-1">{title}</h3>
-      <p className="text-sm text-text-muted leading-relaxed">{description}</p>
+      <h3 className="text-sm font-semibold text-text-base dark:text-dark-text mb-1">{title}</h3>
+      <p className="text-sm text-text-muted dark:text-dark-muted leading-relaxed">{description}</p>
     </div>
   );
 }
@@ -55,8 +55,8 @@ function Step({ number, title, description }: StepProps): React.JSX.Element {
         {number}
       </div>
       <div>
-        <h3 className="text-sm font-semibold text-text-base">{title}</h3>
-        <p className="text-sm text-text-muted mt-0.5">{description}</p>
+        <h3 className="text-sm font-semibold text-text-base dark:text-dark-text">{title}</h3>
+        <p className="text-sm text-text-muted dark:text-dark-muted mt-0.5">{description}</p>
       </div>
     </div>
   );
@@ -65,7 +65,7 @@ function Step({ number, title, description }: StepProps): React.JSX.Element {
 function CodeBlock({ children }: { children: string }): React.JSX.Element {
   return (
     <pre className="
-      rounded-lg bg-text-base text-white
+      rounded-lg bg-text-base dark:bg-dark-surface text-white dark:text-dark-text
       p-4 overflow-x-auto
       text-xs leading-relaxed
       font-mono
@@ -80,13 +80,13 @@ export default function LandingPage(): React.JSX.Element {
     <div className="max-w-4xl mx-auto space-y-16 md:space-y-24 pb-12">
       {/* Hero */}
       <section className="text-center pt-8 md:pt-16">
-        <div className="inline-flex items-center justify-center size-20 rounded-2xl bg-brand-surface mb-6">
+        <div className="inline-flex items-center justify-center size-20 rounded-2xl bg-brand-surface dark:bg-dark-surface mb-6">
           <MonitorPlay className="size-10 text-brand" />
         </div>
-        <h1 className="text-3xl md:text-5xl font-bold text-text-base mb-4 tracking-tight">
+        <h1 className="text-3xl md:text-5xl font-bold text-text-base dark:text-dark-text mb-4 tracking-tight">
           TubeCards
         </h1>
-        <p className="text-lg md:text-xl text-text-muted max-w-2xl mx-auto mb-8 leading-relaxed">
+        <p className="text-lg md:text-xl text-text-muted dark:text-dark-muted max-w-2xl mx-auto mb-8 leading-relaxed">
           Turn any YouTube video into flashcards and summaries.
           Self-hosted, private, powered by your choice of LLM.
         </p>
@@ -98,7 +98,7 @@ export default function LandingPage(): React.JSX.Element {
             px-6 py-3
             text-base font-medium text-white
             transition-colors hover:bg-brand-dark
-            focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2
+            focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 dark:focus:ring-offset-dark-bg
           "
         >
           <Play className="size-5" />
@@ -109,7 +109,7 @@ export default function LandingPage(): React.JSX.Element {
 
       {/* How It Works */}
       <section>
-        <h2 className="text-xl md:text-2xl font-bold text-text-base text-center mb-8">
+        <h2 className="text-xl md:text-2xl font-bold text-text-base dark:text-dark-text text-center mb-8">
           How It Works
         </h2>
         <div className="space-y-6 max-w-lg mx-auto">
@@ -138,7 +138,7 @@ export default function LandingPage(): React.JSX.Element {
 
       {/* Features Grid */}
       <section>
-        <h2 className="text-xl md:text-2xl font-bold text-text-base text-center mb-8">
+        <h2 className="text-xl md:text-2xl font-bold text-text-base dark:text-dark-text text-center mb-8">
           Features
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -177,24 +177,24 @@ export default function LandingPage(): React.JSX.Element {
 
       {/* Raspberry Pi Installation Guide */}
       <section>
-        <div className="rounded-xl border border-border bg-white p-6 md:p-8">
+        <div className="rounded-xl border border-border dark:border-dark-border bg-white dark:bg-dark-card p-6 md:p-8">
           <div className="flex items-center gap-3 mb-6">
-            <div className="inline-flex items-center justify-center size-10 rounded-lg bg-brand-surface">
+            <div className="inline-flex items-center justify-center size-10 rounded-lg bg-brand-surface dark:bg-dark-surface">
               <Cpu className="size-5 text-brand" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-text-base">Raspberry Pi Installation</h2>
-              <p className="text-sm text-text-muted">Run TubeCards on your own hardware</p>
+              <h2 className="text-xl font-bold text-text-base dark:text-dark-text">Raspberry Pi Installation</h2>
+              <p className="text-sm text-text-muted dark:text-dark-muted">Run TubeCards on your own hardware</p>
             </div>
           </div>
 
           <div className="space-y-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Server className="size-4 text-text-muted" />
-                <h3 className="text-sm font-semibold text-text-base">Prerequisites</h3>
+                <Server className="size-4 text-text-muted dark:text-dark-muted" />
+                <h3 className="text-sm font-semibold text-text-base dark:text-dark-text">Prerequisites</h3>
               </div>
-              <ul className="text-sm text-text-muted space-y-1 ml-6 list-disc">
+              <ul className="text-sm text-text-muted dark:text-dark-muted space-y-1 ml-6 list-disc">
                 <li>Raspberry Pi 4 (4GB+ RAM recommended)</li>
                 <li>Raspberry Pi OS (64-bit)</li>
                 <li>Docker and Docker Compose installed</li>
@@ -204,8 +204,8 @@ export default function LandingPage(): React.JSX.Element {
 
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Terminal className="size-4 text-text-muted" />
-                <h3 className="text-sm font-semibold text-text-base">1. Clone the repository</h3>
+                <Terminal className="size-4 text-text-muted dark:text-dark-muted" />
+                <h3 className="text-sm font-semibold text-text-base dark:text-dark-text">1. Clone the repository</h3>
               </div>
               <CodeBlock>{`git clone https://github.com/your-user/tube-cards.git
 cd tube-cards`}</CodeBlock>
@@ -213,45 +213,45 @@ cd tube-cards`}</CodeBlock>
 
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Terminal className="size-4 text-text-muted" />
-                <h3 className="text-sm font-semibold text-text-base">2. Configure environment</h3>
+                <Terminal className="size-4 text-text-muted dark:text-dark-muted" />
+                <h3 className="text-sm font-semibold text-text-base dark:text-dark-text">2. Configure environment</h3>
               </div>
               <CodeBlock>{`cp api/.env.example api/.env
 nano api/.env  # Add your API keys`}</CodeBlock>
-              <p className="text-xs text-text-muted mt-2">
+              <p className="text-xs text-text-muted dark:text-dark-muted mt-2">
                 Set your LLM provider API key. For local models, install Ollama and set
-                <code className="px-1 py-0.5 bg-brand-surface rounded text-text-base text-xs mx-1">LLM_PROVIDER=ollama</code>.
+                <code className="px-1 py-0.5 bg-brand-surface dark:bg-dark-surface rounded text-text-base dark:text-dark-text text-xs mx-1">LLM_PROVIDER=ollama</code>.
               </p>
             </div>
 
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Terminal className="size-4 text-text-muted" />
-                <h3 className="text-sm font-semibold text-text-base">3. Start with Docker Compose</h3>
+                <Terminal className="size-4 text-text-muted dark:text-dark-muted" />
+                <h3 className="text-sm font-semibold text-text-base dark:text-dark-text">3. Start with Docker Compose</h3>
               </div>
               <CodeBlock>{`docker compose up -d`}</CodeBlock>
             </div>
 
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Wifi className="size-4 text-text-muted" />
-                <h3 className="text-sm font-semibold text-text-base">4. Access the app</h3>
+                <Wifi className="size-4 text-text-muted dark:text-dark-muted" />
+                <h3 className="text-sm font-semibold text-text-base dark:text-dark-text">4. Access the app</h3>
               </div>
-              <p className="text-sm text-text-muted">
+              <p className="text-sm text-text-muted dark:text-dark-muted">
                 Open your browser and navigate to{" "}
-                <code className="px-1.5 py-0.5 bg-brand-surface rounded text-text-base text-xs">
+                <code className="px-1.5 py-0.5 bg-brand-surface dark:bg-dark-surface rounded text-text-base dark:text-dark-text text-xs">
                   http://raspberrypi.local:5173
                 </code>{" "}
                 or use your Pi's IP address.
               </p>
             </div>
 
-            <div className="rounded-lg bg-brand-surface p-4">
-              <p className="text-sm text-text-base">
+            <div className="rounded-lg bg-brand-surface dark:bg-dark-surface p-4">
+              <p className="text-sm text-text-base dark:text-dark-text">
                 <strong>Tip:</strong> For local-only LLM usage, install Ollama on the Pi with{" "}
-                <code className="px-1 py-0.5 bg-white rounded text-xs">curl -fsSL https://ollama.ai/install.sh | sh</code>{" "}
+                <code className="px-1 py-0.5 bg-white dark:bg-dark-card rounded text-xs">curl -fsSL https://ollama.ai/install.sh | sh</code>{" "}
                 and pull a model like{" "}
-                <code className="px-1 py-0.5 bg-white rounded text-xs">ollama pull llama3.2</code>.
+                <code className="px-1 py-0.5 bg-white dark:bg-dark-card rounded text-xs">ollama pull llama3.2</code>.
               </p>
             </div>
           </div>
