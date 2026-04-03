@@ -1,13 +1,14 @@
 {
-  "name": "client-temp",
+  "name": "tube-cards-client",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc --noEmit && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "axios": "^1.14.0",
@@ -28,6 +29,7 @@
     "globals": "^17.4.0",
     "postcss": "^8.5.8",
     "tailwindcss": "^3.4.19",
+    "typescript": "^6.0.2",
     "vite": "^8.0.1"
   }
 }

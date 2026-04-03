@@ -9,7 +9,9 @@
       "Bash(npx tailwindcss:*)",
       "Bash(rm App.css App.jsx)",
       "Bash(mkdir -p api components config constants context hooks layouts lib pages)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(rm:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

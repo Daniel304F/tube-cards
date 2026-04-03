@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { AppLayout } from "./layouts/AppLayout";
 
-export default function App() {
+export default function App(): React.JSX.Element {
   return (
     <AppLayout>
       <Routes>

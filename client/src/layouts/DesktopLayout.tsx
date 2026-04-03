@@ -1,4 +1,8 @@
-export function DesktopLayout({ children }) {
+interface DesktopLayoutProps {
+  children: React.ReactNode;
+}
+
+export function DesktopLayout({ children }: DesktopLayoutProps): React.JSX.Element {
   return (
     <div className="flex h-screen bg-brand-surface">
       {/* Sidebar — will be added later */}

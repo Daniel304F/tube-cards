@@ -1,14 +1,20 @@
 import { useLocation, Link } from "react-router-dom";
-import { Plus, Clock, Folder, Settings } from "lucide-react";
+import { Plus, Clock, Folder, Settings, type LucideIcon } from "lucide-react";
 
-const NAV_ITEMS = [
+interface NavItem {
+  to: string;
+  icon: LucideIcon;
+  label: string;
+}
+
+const NAV_ITEMS: NavItem[] = [
   { to: "/process", icon: Plus, label: "New" },
   { to: "/history", icon: Clock, label: "History" },
   { to: "/folders", icon: Folder, label: "Folders" },
   { to: "/config", icon: Settings, label: "Config" },
 ];
 
-export function BottomNav() {
+export function BottomNav(): React.JSX.Element {
   const { pathname } = useLocation();
 
   return (

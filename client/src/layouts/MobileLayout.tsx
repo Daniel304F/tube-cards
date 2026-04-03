@@ -1,6 +1,10 @@
 import { BottomNav } from "../components/bottom-nav/BottomNav";
 
-export function MobileLayout({ children }) {
+interface MobileLayoutProps {
+  children: React.ReactNode;
+}
+
+export function MobileLayout({ children }: MobileLayoutProps): React.JSX.Element {
   return (
     <div className="flex flex-col h-screen bg-brand-surface">
       {/* MobileTopbar — will be added later */}
