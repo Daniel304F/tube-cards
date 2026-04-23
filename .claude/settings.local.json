@@ -18,7 +18,8 @@
       "Bash(node -e \"const lr = require\\('lucide-react'\\); const yt = Object.keys\\(lr\\).filter\\(k => k.toLowerCase\\(\\).includes\\('video'\\) || k.toLowerCase\\(\\).includes\\('play'\\)\\); console.log\\(yt.slice\\(0,15\\)\\)\")",
       "PowerShell(Set-ExecutionPolicy *)",
       "PowerShell(& d:\\\\Projekte\\\\tube-cards\\\\api\\\\.venv\\\\Scripts\\\\python.exe -c \"import sys; sys.path.insert\\(0, r'd:\\\\Projekte\\\\tube-cards\\\\api'\\); from main import app; print\\('OK'\\); print\\([r.path for r in app.routes if hasattr\\(r,'path'\\)]\\)\")",
-      "Bash(echo \"EXIT=$?\")"
+      "Bash(echo \"EXIT=$?\")",
+      "PowerShell(Set-Location d:\\\\Projekte\\\\tube-cards\\\\client; & npx tsc --noEmit; Write-Output \"EXIT=$LASTEXITCODE\")"
     ]
   }
 }
