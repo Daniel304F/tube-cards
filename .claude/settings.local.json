@@ -19,7 +19,8 @@
       "PowerShell(Set-ExecutionPolicy *)",
       "PowerShell(& d:\\\\Projekte\\\\tube-cards\\\\api\\\\.venv\\\\Scripts\\\\python.exe -c \"import sys; sys.path.insert\\(0, r'd:\\\\Projekte\\\\tube-cards\\\\api'\\); from main import app; print\\('OK'\\); print\\([r.path for r in app.routes if hasattr\\(r,'path'\\)]\\)\")",
       "Bash(echo \"EXIT=$?\")",
-      "PowerShell(Set-Location d:\\\\Projekte\\\\tube-cards\\\\client; & npx tsc --noEmit; Write-Output \"EXIT=$LASTEXITCODE\")"
+      "PowerShell(Set-Location d:\\\\Projekte\\\\tube-cards\\\\client; & npx tsc --noEmit; Write-Output \"EXIT=$LASTEXITCODE\")",
+      "PowerShell(Set-Location d:\\\\Projekte\\\\tube-cards\\\\api; & .\\\\.venv\\\\Scripts\\\\python.exe -m pytest 2>&1 | Select-Object -Last 3; Set-Location d:\\\\Projekte\\\\tube-cards\\\\client; & npx vitest run 2>&1 | Select-Object -Last 5; & npx tsc --noEmit; Write-Output \"TSC_EXIT=$LASTEXITCODE\")"
     ]
   }
 }
