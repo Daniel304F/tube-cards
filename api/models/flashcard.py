@@ -11,3 +11,10 @@ class Flashcard(SQLModel, table=True):
     folder_id: int | None = Field(default=None, foreign_key="folder.id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    # SM-2 spaced repetition state
+    ease_factor: float = Field(default=2.5)
+    interval: int = Field(default=0)
+    repetitions: int = Field(default=0)
+    due_date: datetime = Field(default_factory=datetime.utcnow)
+    last_reviewed: datetime | None = Field(default=None)
