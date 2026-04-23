@@ -4,6 +4,7 @@ from sqlmodel import Session
 from database import get_session
 from schemas.flashcard import FlashcardCreate, FlashcardRead, FlashcardUpdate
 from services import flashcard as flashcard_service
+from services import tag as tag_service
 
 router = APIRouter(prefix="/flashcards", tags=["flashcards"])
 
@@ -12,9 +13,12 @@ router = APIRouter(prefix="/flashcards", tags=["flashcards"])
 async def list_flashcards(
     video_id: int | None = None,
     folder_id: int | None = None,
+    tag_id: int | None = None,
     session: Session = Depends(get_session),
 ) -> list[FlashcardRead]:
-    return flashcard_service.get_all(session, video_id=video_id, folder_id=folder_id)
+    return flashcard_service.get_all(
+        session, video_id=video_id, folder_id=folder_id, tag_id=tag_id
+    )
 
 
 @router.get("/{flashcard_id}", response_model=FlashcardRead)
@@ -48,3 +52,21 @@ async def delete_flashcard(
     session: Session = Depends(get_session),
 ) -> None:
     flashcard_service.delete(session, flashcard_id)
+
+
+@router.post("/{flashcard_id}/tags/{tag_id}", status_code=204)
+async def attach_tag(
+    flashcard_id: int,
+    tag_id: int,
+    session: Session = Depends(get_session),
+) -> None:
+    tag_service.attach(session, flashcard_id, tag_id)
+
+
+@router.delete("/{flashcard_id}/tags/{tag_id}", status_code=204)
+async def detach_tag(
+    flashcard_id: int,
+    tag_id: int,
+    session: Session = Depends(get_session),
+) -> None:
+    tag_service.detach(session, flashcard_id, tag_id)

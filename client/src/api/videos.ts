@@ -1,4 +1,5 @@
 import client from "./client";
+import type { TagData } from "./tags";
 
 export interface VideoData {
   id: number;
@@ -17,6 +18,7 @@ export interface FlashcardData {
   folder_id: number | null;
   created_at: string;
   updated_at: string;
+  tags: TagData[];
 }
 
 export interface SummaryData {

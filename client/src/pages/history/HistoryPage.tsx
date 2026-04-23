@@ -2,11 +2,14 @@ import { useState } from "react";
 import { Clock, BookOpen, FileText, ChevronDown, ChevronRight, AlertCircle, Loader2, Upload } from "lucide-react";
 import { useHistory } from "../../hooks/useHistory";
 import { useFolders } from "../../hooks/useFolders";
+import { useTags } from "../../hooks/useTags";
 import { FlashcardCard } from "../../components/flashcard-card";
 import { FolderPicker } from "../../components/folder-picker";
+import { TagPicker } from "../../components/tag-picker";
 import { exportToNotion, exportToRemnote } from "../../api/exports";
 import { updateFlashcard } from "../../api/flashcards";
 import { updateSummary } from "../../api/summaries";
+import { attachTag, detachTag, type TagData } from "../../api/tags";
 import type { FlashcardData, SummaryData } from "../../api/videos";
 import type { FolderData } from "../../api/folders";
 import axios from "axios";
@@ -101,8 +104,12 @@ interface VideoSectionProps {
   flashcards: FlashcardData[];
   summaries: SummaryData[];
   folders: FolderData[];
+  allTags: TagData[];
   onMoveFlashcard: (flashcardId: number, folderId: number | null) => void;
   onMoveSummary: (summaryId: number, folderId: number | null) => void;
+  onAttachTag: (flashcardId: number, tagId: number) => void;
+  onDetachTag: (flashcardId: number, tagId: number) => void;
+  onCreateTag: (name: string) => Promise<TagData>;
 }
 
 function VideoSection({
@@ -111,8 +118,12 @@ function VideoSection({
   flashcards,
   summaries,
   folders,
+  allTags,
   onMoveFlashcard,
   onMoveSummary,
+  onAttachTag,
+  onDetachTag,
+  onCreateTag,
 }: VideoSectionProps): React.JSX.Element {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const date = new Date(createdAt).toLocaleDateString("de-DE", {
@@ -173,7 +184,14 @@ function VideoSection({
                 {flashcards.map((fc, i) => (
                   <div key={fc.id} className="space-y-1.5">
                     <FlashcardCard question={fc.question} answer={fc.answer} index={i} />
-                    <div className="flex justify-end">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <TagPicker
+                        allTags={allTags}
+                        attachedTagIds={fc.tags.map((t) => t.id)}
+                        onAttach={(tagId) => onAttachTag(fc.id, tagId)}
+                        onDetach={(tagId) => onDetachTag(fc.id, tagId)}
+                        onCreate={onCreateTag}
+                      />
                       <FolderPicker
                         folders={folders}
                         currentFolderId={fc.folder_id}
@@ -215,6 +233,7 @@ function VideoSection({
 export default function HistoryPage(): React.JSX.Element {
   const { videos, isLoading, error, refetch } = useHistory();
   const { folders } = useFolders();
+  const { tags, create: createTag } = useTags();
 
   async function handleMoveFlashcard(flashcardId: number, folderId: number | null): Promise<void> {
     await updateFlashcard(flashcardId, { folder_id: folderId });
@@ -224,6 +243,20 @@ export default function HistoryPage(): React.JSX.Element {
   async function handleMoveSummary(summaryId: number, folderId: number | null): Promise<void> {
     await updateSummary(summaryId, { folder_id: folderId });
     await refetch();
+  }
+
+  async function handleAttachTag(flashcardId: number, tagId: number): Promise<void> {
+    await attachTag(flashcardId, tagId);
+    await refetch();
+  }
+
+  async function handleDetachTag(flashcardId: number, tagId: number): Promise<void> {
+    await detachTag(flashcardId, tagId);
+    await refetch();
+  }
+
+  async function handleCreateTag(name: string): Promise<TagData> {
+    return createTag({ name });
   }
 
   if (isLoading) {
@@ -274,8 +307,12 @@ export default function HistoryPage(): React.JSX.Element {
             flashcards={video.flashcards}
             summaries={video.summaries}
             folders={folders}
+            allTags={tags}
             onMoveFlashcard={(fcId, folderId) => void handleMoveFlashcard(fcId, folderId)}
             onMoveSummary={(sumId, folderId) => void handleMoveSummary(sumId, folderId)}
+            onAttachTag={(fcId, tagId) => void handleAttachTag(fcId, tagId)}
+            onDetachTag={(fcId, tagId) => void handleDetachTag(fcId, tagId)}
+            onCreateTag={handleCreateTag}
           />
         ))}
       </div>

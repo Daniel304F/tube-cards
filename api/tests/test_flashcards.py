@@ -18,10 +18,14 @@ class TestFlashcardService:
         assert result.id is not None
         assert result.question == "Q?"
         assert result.video_id == video.id
-        # SM-2 defaults
-        assert result.ease_factor == 2.5
-        assert result.repetitions == 0
-        assert result.interval == 0
+        assert result.tags == []
+
+        # SM-2 defaults live on the ORM model, not in the read schema
+        stored = session.get(Flashcard, result.id)
+        assert stored is not None
+        assert stored.ease_factor == 2.5
+        assert stored.repetitions == 0
+        assert stored.interval == 0
 
     def test_create_many_persists_all(self, session: Session, make_video) -> None:
         video = make_video()

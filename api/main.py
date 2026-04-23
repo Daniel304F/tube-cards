@@ -8,7 +8,7 @@ from sqlmodel import SQLModel
 from database import engine
 import models  # noqa: F401 — ensure all tables are registered for create_all
 from migrations import run_migrations
-from routers import videos, flashcards, summaries, folders, config, exports, study, search
+from routers import videos, flashcards, summaries, folders, config, exports, study, search, tags
 
 
 @asynccontextmanager
@@ -35,3 +35,4 @@ app.include_router(config.router)
 app.include_router(exports.router)
 app.include_router(study.router)
 app.include_router(search.router)
+app.include_router(tags.router)
