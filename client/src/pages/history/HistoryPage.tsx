@@ -6,6 +6,7 @@ import { useTags } from "../../hooks/useTags";
 import { FlashcardCard } from "../../components/flashcard-card";
 import { FolderPicker } from "../../components/folder-picker";
 import { TagPicker } from "../../components/tag-picker";
+import { EditableText } from "../../components/editable-text";
 import { exportToNotion, exportToRemnote } from "../../api/exports";
 import { updateFlashcard } from "../../api/flashcards";
 import { updateSummary } from "../../api/summaries";
@@ -110,6 +111,8 @@ interface VideoSectionProps {
   onAttachTag: (flashcardId: number, tagId: number) => void;
   onDetachTag: (flashcardId: number, tagId: number) => void;
   onCreateTag: (name: string) => Promise<TagData>;
+  onEditFlashcard: (flashcardId: number, data: { question: string; answer: string }) => Promise<void>;
+  onEditSummary: (summaryId: number, content: string) => Promise<void>;
 }
 
 function VideoSection({
@@ -124,6 +127,8 @@ function VideoSection({
   onAttachTag,
   onDetachTag,
   onCreateTag,
+  onEditFlashcard,
+  onEditSummary,
 }: VideoSectionProps): React.JSX.Element {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const date = new Date(createdAt).toLocaleDateString("de-DE", {
@@ -183,7 +188,12 @@ function VideoSection({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {flashcards.map((fc, i) => (
                   <div key={fc.id} className="space-y-1.5">
-                    <FlashcardCard question={fc.question} answer={fc.answer} index={i} />
+                    <FlashcardCard
+                      question={fc.question}
+                      answer={fc.answer}
+                      index={i}
+                      onSave={(data) => onEditFlashcard(fc.id, data)}
+                    />
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <TagPicker
                         allTags={allTags}
@@ -218,9 +228,12 @@ function VideoSection({
                 />
               </div>
               <div className="rounded-lg border border-border dark:border-dark-border bg-brand-surface dark:bg-dark-surface p-4">
-                <p className="text-sm text-text-base dark:text-dark-text whitespace-pre-wrap leading-relaxed">
-                  {summary.content}
-                </p>
+                <EditableText
+                  value={summary.content}
+                  onSave={(content) => onEditSummary(summary.id, content)}
+                  label="summary"
+                  textClassName="text-sm text-text-base dark:text-dark-text leading-relaxed"
+                />
               </div>
             </section>
           ))}
@@ -257,6 +270,19 @@ export default function HistoryPage(): React.JSX.Element {
 
   async function handleCreateTag(name: string): Promise<TagData> {
     return createTag({ name });
+  }
+
+  async function handleEditFlashcard(
+    flashcardId: number,
+    data: { question: string; answer: string },
+  ): Promise<void> {
+    await updateFlashcard(flashcardId, data);
+    await refetch();
+  }
+
+  async function handleEditSummary(summaryId: number, content: string): Promise<void> {
+    await updateSummary(summaryId, { content });
+    await refetch();
   }
 
   if (isLoading) {
@@ -313,6 +339,8 @@ export default function HistoryPage(): React.JSX.Element {
             onAttachTag={(fcId, tagId) => void handleAttachTag(fcId, tagId)}
             onDetachTag={(fcId, tagId) => void handleDetachTag(fcId, tagId)}
             onCreateTag={handleCreateTag}
+            onEditFlashcard={handleEditFlashcard}
+            onEditSummary={handleEditSummary}
           />
         ))}
       </div>

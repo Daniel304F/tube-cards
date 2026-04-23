@@ -78,6 +78,19 @@ class TestFlashcardService:
         assert result.question == "New"
         assert result.answer == "X is a thing."  # unchanged
 
+    def test_update_changes_question_and_answer_together(
+        self, session: Session, make_video, make_flashcard
+    ) -> None:
+        video = make_video()
+        fc = make_flashcard(video_id=video.id, question="Old Q", answer="Old A")
+
+        result = flashcard_service.update(
+            session, fc.id, FlashcardUpdate(question="New Q", answer="New A")
+        )
+
+        assert result.question == "New Q"
+        assert result.answer == "New A"
+
     def test_update_can_clear_folder(
         self, session: Session, make_video, make_folder, make_flashcard
     ) -> None:
