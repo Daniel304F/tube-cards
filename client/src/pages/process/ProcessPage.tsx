@@ -3,10 +3,11 @@ import { Loader2, Play, RotateCcw, AlertCircle, MonitorPlay, BookOpen, FileText 
 import { useVideoProcessor } from "../../hooks/useVideoProcessor";
 import { FlashcardCard } from "../../components/flashcard-card";
 import { BatchProcessor } from "./BatchProcessor";
+import { PlaylistProcessor } from "./PlaylistProcessor";
 
 const YOUTUBE_URL_REGEX = /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w-]{11}/;
 
-type Mode = "single" | "batch";
+type Mode = "single" | "batch" | "playlist";
 
 export default function ProcessPage(): React.JSX.Element {
   const [mode, setMode] = useState<Mode>("single");
@@ -113,6 +114,8 @@ export default function ProcessPage(): React.JSX.Element {
 
       {mode === "batch" ? (
         <BatchProcessor />
+      ) : mode === "playlist" ? (
+        <PlaylistProcessor />
       ) : (
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <div>
@@ -192,8 +195,9 @@ function ModeToggle({ mode, onChange }: ModeToggleProps): React.JSX.Element {
         bg-white dark:bg-dark-card p-1
       "
     >
-      {(["single", "batch"] as const).map((m) => {
+      {(["single", "batch", "playlist"] as const).map((m) => {
         const isActive = mode === m;
+        const label = m === "single" ? "Single URL" : m === "batch" ? "Batch" : "Playlist";
         return (
           <button
             key={m}
@@ -209,7 +213,7 @@ function ModeToggle({ mode, onChange }: ModeToggleProps): React.JSX.Element {
                 : "text-text-muted dark:text-dark-muted hover:text-text-base dark:hover:text-dark-text"}
             `}
           >
-            {m === "single" ? "Single URL" : "Batch"}
+            {label}
           </button>
         );
       })}

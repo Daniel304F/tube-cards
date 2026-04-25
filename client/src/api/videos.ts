@@ -63,6 +63,13 @@ export async function processBatch(youtubeUrls: string[]): Promise<BatchResult> 
   return response.data;
 }
 
+export async function processPlaylist(playlistUrl: string): Promise<BatchResult> {
+  const response = await client.post<BatchResult>("/videos/process-playlist", {
+    playlist_url: playlistUrl,
+  });
+  return response.data;
+}
+
 export async function fetchVideos(): Promise<VideoData[]> {
   const response = await client.get<VideoData[]>("/videos/");
   return response.data;

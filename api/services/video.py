@@ -15,6 +15,7 @@ from schemas.flashcard import FlashcardRead
 from schemas.summary import SummaryRead
 from services import llm, transcript as transcript_service
 from services import flashcard as flashcard_service
+from services import playlist as playlist_service
 from services import summary as summary_service
 from database import get_or_404
 
@@ -99,6 +100,14 @@ async def process_batch(
                 VideoBatchItemResult(youtube_url=url, success=False, error=str(e))
             )
     return results
+
+
+async def process_playlist(
+    session: Session, playlist_url: str
+) -> list[VideoBatchItemResult]:
+    """Extract videos from a playlist, then run them through the batch pipeline."""
+    urls = playlist_service.extract_video_urls(playlist_url)
+    return await process_batch(session, urls)
 
 
 async def _generate_flashcards(

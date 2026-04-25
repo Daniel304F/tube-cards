@@ -38,6 +38,10 @@ class VideoBatchRequest(SQLModel):
     youtube_urls: list[str]
 
 
+class VideoPlaylistRequest(SQLModel):
+    playlist_url: str
+
+
 class VideoBatchItemResult(SQLModel):
     youtube_url: str
     success: bool

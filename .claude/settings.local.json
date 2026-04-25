@@ -21,7 +21,11 @@
       "Bash(echo \"EXIT=$?\")",
       "PowerShell(Set-Location d:\\\\Projekte\\\\tube-cards\\\\client; & npx tsc --noEmit; Write-Output \"EXIT=$LASTEXITCODE\")",
       "PowerShell(Set-Location d:\\\\Projekte\\\\tube-cards\\\\api; & .\\\\.venv\\\\Scripts\\\\python.exe -m pytest 2>&1 | Select-Object -Last 3; Set-Location d:\\\\Projekte\\\\tube-cards\\\\client; & npx vitest run 2>&1 | Select-Object -Last 5; & npx tsc --noEmit; Write-Output \"TSC_EXIT=$LASTEXITCODE\")",
-      "Bash(.venv/Scripts/python.exe -m pytest --tb=short)"
+      "Bash(.venv/Scripts/python.exe -m pytest --tb=short)",
+      "mcp__playwright__browser_close",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_take_screenshot"
     ]
   }
 }

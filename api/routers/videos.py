@@ -5,6 +5,7 @@ from database import get_session
 from schemas.video import (
     VideoBatchRequest,
     VideoBatchResponse,
+    VideoPlaylistRequest,
     VideoProcessRequest,
     VideoProcessResponse,
     VideoRead,
@@ -45,6 +46,21 @@ async def process_videos_batch(
     if not data.youtube_urls:
         raise HTTPException(status_code=422, detail="youtube_urls must not be empty")
     results = await video_service.process_batch(session, data.youtube_urls)
+    return _to_batch_response(results)
+
+
+@router.post("/process-playlist", response_model=VideoBatchResponse, status_code=201)
+async def process_videos_playlist(
+    data: VideoPlaylistRequest,
+    session: Session = Depends(get_session),
+) -> VideoBatchResponse:
+    if not data.playlist_url.strip():
+        raise HTTPException(status_code=422, detail="playlist_url must not be empty")
+    results = await video_service.process_playlist(session, data.playlist_url)
+    return _to_batch_response(results)
+
+
+def _to_batch_response(results: list) -> VideoBatchResponse:
     return VideoBatchResponse(
         results=results,
         success_count=sum(1 for r in results if r.success),

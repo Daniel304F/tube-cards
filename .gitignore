@@ -148,3 +148,5 @@ __pycache__/
 
 # SQLite database
 api/data/app.db
+
+.playwright-mcp
