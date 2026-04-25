@@ -10,7 +10,7 @@ from models.flashcard import Flashcard
 from models.summary import Summary
 from schemas.flashcard import FlashcardCreate
 from schemas.summary import SummaryCreate
-from schemas.video import VideoProcessResponse, VideoRead
+from schemas.video import VideoBatchItemResult, VideoProcessResponse, VideoRead
 from schemas.flashcard import FlashcardRead
 from schemas.summary import SummaryRead
 from services import llm, transcript as transcript_service
@@ -80,6 +80,25 @@ async def process(session: Session, youtube_url: str) -> VideoProcessResponse:
         flashcards=[FlashcardRead.model_validate(fc) for fc in flashcards],
         summary=SummaryRead.model_validate(summary),
     )
+
+
+async def process_batch(
+    session: Session, youtube_urls: list[str]
+) -> list[VideoBatchItemResult]:
+    """Process URLs sequentially. Failures don't stop the batch."""
+    results: list[VideoBatchItemResult] = []
+    for url in youtube_urls:
+        try:
+            result = await process(session, url)
+            results.append(
+                VideoBatchItemResult(youtube_url=url, success=True, result=result)
+            )
+        except Exception as e:
+            logger.warning("Batch item failed for %s: %s", url, str(e))
+            results.append(
+                VideoBatchItemResult(youtube_url=url, success=False, error=str(e))
+            )
+    return results
 
 
 async def _generate_flashcards(

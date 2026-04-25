@@ -6,23 +6,27 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session
 
 from services import video as video_service
+from schemas.summary import SummaryRead
 from schemas.video import VideoProcessResponse, VideoRead
 
 
 def _fake_response(url: str) -> VideoProcessResponse:
     from datetime import datetime
 
+    now = datetime.utcnow()
     return VideoProcessResponse(
         video=VideoRead(
             id=1,
             youtube_url=url,
             title="T",
             transcript="x",
-            processed_at=datetime.utcnow(),
-            created_at=datetime.utcnow(),
+            processed_at=now,
+            created_at=now,
         ),
         flashcards=[],
-        summary=None,  # type: ignore[arg-type]
+        summary=SummaryRead(
+            id=1, content="s", video_id=1, folder_id=None, created_at=now, updated_at=now
+        ),
     )
 
 

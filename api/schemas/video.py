@@ -32,3 +32,20 @@ class VideoProcessResponse(SQLModel):
     video: VideoRead
     flashcards: list[FlashcardRead]
     summary: SummaryRead
+
+
+class VideoBatchRequest(SQLModel):
+    youtube_urls: list[str]
+
+
+class VideoBatchItemResult(SQLModel):
+    youtube_url: str
+    success: bool
+    result: VideoProcessResponse | None = None
+    error: str | None = None
+
+
+class VideoBatchResponse(SQLModel):
+    results: list[VideoBatchItemResult]
+    success_count: int
+    error_count: int
