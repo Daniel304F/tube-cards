@@ -1,6 +1,10 @@
 # Frontend Guidelines
 
-React-specific patterns, component design, and UI conventions.
+React + TypeScript patterns, component design, and UI conventions.
+
+> All client code is **strict TypeScript** (`.tsx` / `.ts`). No `.jsx` / `.js`,
+> no `any`, no implicit returns. Props are typed with `interface`, return type
+> is always `React.JSX.Element` (or `null` where applicable).
 
 ---
 
@@ -8,29 +12,31 @@ React-specific patterns, component design, and UI conventions.
 
 Every component follows this file order:
 
-```jsx
+```tsx
 // 1. Imports — external libs first, then internal
-import { useState, useEffect } from "react";
-import { Trash2, Plus } from "lucide-react";
-import { useFlashcards } from "@/hooks/useFlashcards";
-import { EmptyState } from "@/components/empty-state";
+import { useState } from "react";
+import { Trash2 } from "lucide-react";
+import { useFlashcard } from "../../hooks/useFlashcard";
+import { ErrorMessage } from "../error-message";
+import { FlashcardCardSkeleton } from "./FlashcardCardSkeleton";
 
-// 2. Types / prop definitions (JSDoc or TS interface)
-/**
- * @param {{ flashcardId: number, onDelete: () => void }} props
- */
+// 2. Props interface
+interface FlashcardCardProps {
+  flashcardId: number;
+  onDelete: (id: number) => void;
+}
 
 // 3. Component
-export function FlashcardCard({ flashcardId, onDelete }) {
+export function FlashcardCard({ flashcardId, onDelete }: FlashcardCardProps): React.JSX.Element | null {
   // 3a. Hooks (always at top)
   const { flashcard, isLoading, error } = useFlashcard(flashcardId);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   // 3b. Derived values
   const previewText = flashcard?.answer?.slice(0, 120);
 
   // 3c. Handlers
-  function handleDelete() {
+  function handleDelete(): void {
     onDelete(flashcardId);
   }
 
@@ -50,18 +56,18 @@ export function FlashcardCard({ flashcardId, onDelete }) {
 
 Never leave a state unhandled. Every data-fetching component needs:
 
-```jsx
+```tsx
 // Loading
-if (isLoading) return <Skeleton />
+if (isLoading) return <Skeleton />;
 
 // Error
-if (error) return <ErrorBanner message={error} />
+if (error) return <ErrorBanner message={error} />;
 
 // Empty
-if (flashcards.length === 0) return <EmptyState ... />
+if (flashcards.length === 0) return <EmptyState ... />;
 
 // Data
-return <FlashcardList flashcards={flashcards} />
+return <FlashcardList flashcards={flashcards} />;
 ```
 
 Empty states should be helpful — suggest an action, don't just say "No items found."
@@ -72,7 +78,7 @@ Empty states should be helpful — suggest an action, don't just say "No items f
 
 ### Use Brand Tokens
 
-```jsx
+```tsx
 // WRONG — raw Tailwind color
 <button className="bg-green-500 hover:bg-green-700">
 
@@ -88,7 +94,7 @@ Group Tailwind classes in this order for readability:
 layout → sizing → spacing → typography → color → border → shadow → transition → state
 ```
 
-```jsx
+```tsx
 <div className="
   flex items-center          // layout
   w-full h-12                // sizing
@@ -109,19 +115,24 @@ layout → sizing → spacing → typography → color → border → shadow →
 
 Extract to a component instead:
 
-```jsx
+```tsx
 // WRONG
 // globals.css
 .card { @apply rounded-lg border border-border shadow-sm p-4 ... }
 
 // CORRECT
-// components/card/Card.jsx
-export function Card({ children, className = '' }) {
+// components/card/Card.tsx
+interface CardProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function Card({ children, className = "" }: CardProps): React.JSX.Element {
   return (
     <div className={`rounded-lg border border-border shadow-sm p-4 ${className}`}>
       {children}
     </div>
-  )
+  );
 }
 ```
 
@@ -129,9 +140,9 @@ export function Card({ children, className = '' }) {
 
 ## Icons (Lucide React)
 
-Always import individually — never the whole library:
+Always import individually — never the whole library. For typed icon props use `LucideIcon`:
 
-```jsx
+```tsx
 // WRONG
 import * as Icons from "lucide-react";
 
@@ -143,7 +154,13 @@ import {
   Trash2,
   ChevronRight,
   Loader2,
+  type LucideIcon,
 } from "lucide-react";
+
+interface IconButtonProps {
+  icon: LucideIcon;
+  label: string;
+}
 ```
 
 Size conventions:
@@ -163,9 +180,9 @@ Loading spinner: always use `<Loader2 className="size-4 animate-spin" />`
 
 All pages render inside a layout. Never build chrome (nav, sidebar) inside a page.
 
-```jsx
-// pages/history/HistoryPage.jsx
-export default function HistoryPage() {
+```tsx
+// pages/history/HistoryPage.tsx
+export default function HistoryPage(): React.JSX.Element {
   return (
     <div>
       <h1>History</h1>
@@ -174,7 +191,7 @@ export default function HistoryPage() {
   );
 }
 
-// App.jsx / router — layout wraps all pages
+// App.tsx / router — layout wraps all pages
 <AppLayout>
   <HistoryPage />
 </AppLayout>;
@@ -188,7 +205,7 @@ export default function HistoryPage() {
 
 Always write **mobile-first**: base classes apply to mobile, `md:` overrides for desktop.
 
-```jsx
+```tsx
 // WRONG — desktop-first
 <div className="flex-row md:flex-col">
 
@@ -209,13 +226,17 @@ Stick to just these two — avoid `sm:`, `lg:`, `xl:` unless strictly necessary.
 
 ### AppLayout — Viewport Switcher
 
-```jsx
-// layouts/AppLayout.jsx
-import { useIsMobile } from "@/hooks/useIsMobile";
+```tsx
+// layouts/AppLayout.tsx
+import { useIsMobile } from "../hooks/useIsMobile";
 import { DesktopLayout } from "./DesktopLayout";
 import { MobileLayout } from "./MobileLayout";
 
-export function AppLayout({ children }) {
+interface AppLayoutProps {
+  children: React.ReactNode;
+}
+
+export function AppLayout({ children }: AppLayoutProps): React.JSX.Element {
   const isMobile = useIsMobile();
   return isMobile ? (
     <MobileLayout>{children}</MobileLayout>
@@ -229,9 +250,13 @@ export function AppLayout({ children }) {
 
 ### DesktopLayout
 
-```jsx
-// layouts/DesktopLayout.jsx
-export function DesktopLayout({ children }) {
+```tsx
+// layouts/DesktopLayout.tsx
+interface DesktopLayoutProps {
+  children: React.ReactNode;
+}
+
+export function DesktopLayout({ children }: DesktopLayoutProps): React.JSX.Element {
   return (
     <div className="flex h-screen bg-brand-surface">
       <Sidebar /> {/* fixed left nav */}
@@ -248,9 +273,13 @@ export function DesktopLayout({ children }) {
 
 ### MobileLayout
 
-```jsx
-// layouts/MobileLayout.jsx
-export function MobileLayout({ children }) {
+```tsx
+// layouts/MobileLayout.tsx
+interface MobileLayoutProps {
+  children: React.ReactNode;
+}
+
+export function MobileLayout({ children }: MobileLayoutProps): React.JSX.Element {
   return (
     <div className="flex flex-col h-screen bg-brand-surface">
       <MobileTopbar />
@@ -272,20 +301,18 @@ export function MobileLayout({ children }) {
 - Active route highlighted with `text-brand`
 - Fixed at bottom, full width, white background with top border
 - Safe area padding for notched phones
+- Items come from the **shared `constants/navigation.ts`** (`NAV_ITEMS`),
+  filtered to skip `Home` — so Sidebar (desktop) and BottomNav (mobile)
+  stay in sync.
 
-```jsx
-// components/bottom-nav/BottomNav.jsx
+```tsx
+// components/bottom-nav/BottomNav.tsx
 import { useLocation, Link } from "react-router-dom";
-import { Home, Clock, Folder, Settings, Plus } from "lucide-react";
+import { NAV_ITEMS } from "../../constants/navigation";
 
-const NAV_ITEMS = [
-  { to: "/process", icon: Plus, label: "New" },
-  { to: "/history", icon: Clock, label: "History" },
-  { to: "/folders", icon: Folder, label: "Folders" },
-  { to: "/config", icon: Settings, label: "Config" },
-];
+const BOTTOM_NAV_ITEMS = NAV_ITEMS.filter((item) => item.to !== "/");
 
-export function BottomNav() {
+export function BottomNav(): React.JSX.Element {
   const { pathname } = useLocation();
 
   return (
@@ -293,13 +320,13 @@ export function BottomNav() {
       className="
         fixed bottom-0 left-0 right-0
         flex items-center justify-around
-        bg-white border-t border-border
+        bg-white dark:bg-dark-card border-t border-border dark:border-dark-border
         h-16
       "
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      {NAV_ITEMS.map(({ to, icon: Icon, label }) => {
-        const isActive = pathname === to;
+      {BOTTOM_NAV_ITEMS.map(({ to, icon: Icon, label }) => {
+        const isActive = pathname.startsWith(to);
         return (
           <Link
             key={to}
@@ -327,7 +354,7 @@ export function BottomNav() {
 
 Every tappable element on mobile must be at least **44×44px**:
 
-```jsx
+```tsx
 // WRONG — too small on mobile
 <button className="p-1">
   <Trash2 className="size-4" />
@@ -345,14 +372,14 @@ Every tappable element on mobile must be at least **44×44px**:
 
 Reserve space below scrollable content for the BottomNav:
 
-```jsx
+```tsx
 // Any scrollable page container on mobile
 <div className="pb-24 md:pb-0">{/* content */}</div>
 ```
 
 Use generous tap-friendly spacing between list items on mobile:
 
-```jsx
+```tsx
 <ul className="flex flex-col gap-2 md:gap-1">
 ```
 
@@ -362,10 +389,10 @@ Use generous tap-friendly spacing between list items on mobile:
 
 Use `useIsMobile()` for structural differences, Tailwind for cosmetic differences:
 
-```jsx
+```tsx
 // Structural — different component tree → useIsMobile
-const isMobile = useIsMobile()
-return isMobile ? <MobileCardView /> : <DesktopTableView />
+const isMobile = useIsMobile();
+return isMobile ? <MobileCardView /> : <DesktopTableView />;
 
 // Cosmetic — same element, different styles → Tailwind
 <h1 className="text-xl md:text-3xl font-bold">
@@ -375,30 +402,45 @@ return isMobile ? <MobileCardView /> : <DesktopTableView />
 
 ## Hooks Pattern
 
-Every data-fetching hook returns a consistent shape:
+Every data-fetching hook returns a consistent shape, fully typed via an
+explicit `Use*Return` interface. Use `useCallback` so dependents
+(`useEffect`, child components) don't re-fire on every render. Narrow
+unknown errors with `instanceof Error`.
 
-```js
-function useFlashcards(folderId) {
-  const [flashcards, setFlashcards] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+```ts
+// hooks/useFlashcards.ts
+import { useState, useEffect, useCallback } from "react";
+import { fetchFlashcards, type FlashcardData } from "../api/flashcards";
 
-  async function load() {
+interface UseFlashcardsReturn {
+  flashcards: FlashcardData[];
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export function useFlashcards(folderId: number | null): UseFlashcardsReturn {
+  const [flashcards, setFlashcards] = useState<FlashcardData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
     try {
       const data = await fetchFlashcards(folderId);
       setFlashcards(data);
-    } catch (err) {
-      setError(err.response?.data?.detail ?? "Failed to load flashcards");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to load flashcards";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [folderId]);
 
   useEffect(() => {
-    load();
-  }, [folderId]);
+    void load();
+  }, [load]);
 
   return { flashcards, isLoading, error, refetch: load };
 }
@@ -410,7 +452,7 @@ function useFlashcards(folderId) {
 
 Every interactive element needs visible feedback:
 
-```jsx
+```tsx
 // Buttons
 <button className="... transition-colors hover:bg-brand-dark active:scale-95">
 
@@ -432,7 +474,7 @@ Avoid instant state switches — use `transition-*` utilities everywhere.
 - Form inputs have associated `<label>` elements
 - Interactive elements are keyboard-navigable (don't override default focus styles without replacing them)
 
-```jsx
+```tsx
 // Icon-only button
 <button aria-label="Delete flashcard" onClick={handleDelete}>
   <Trash2 className="size-4" />

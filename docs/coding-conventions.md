@@ -19,17 +19,22 @@ Both frontend (React) and backend (FastAPI) must follow these.
 
 ### Universal
 
-| Thing            | Convention      | Example                        |
-| ---------------- | --------------- | ------------------------------ |
-| Files (frontend) | kebab-case      | `flashcard-list.jsx`           |
-| Files (backend)  | snake_case      | `flashcard_service.py`         |
-| Components       | PascalCase      | `FlashcardList`                |
-| Hooks            | camelCase + use | `useFlashcards`                |
-| Functions        | camelCase (JS)  | `fetchFlashcards`              |
-| Functions        | snake_case (Py) | `get_flashcard_by_id`          |
-| Constants        | SCREAMING_SNAKE | `MAX_TRANSCRIPT_LENGTH`        |
-| Types/Interfaces | PascalCase      | `FlashcardCreate`, `VideoRead` |
-| Boolean vars     | is/has prefix   | `isLoading`, `hasError`        |
+| Thing                    | Convention      | Example                                |
+| ------------------------ | --------------- | -------------------------------------- |
+| Folders (frontend)       | kebab-case      | `components/flashcard-card/`           |
+| Component files          | PascalCase      | `FlashcardCard.tsx`                    |
+| Hook files               | camelCase + use | `useFlashcards.ts`                     |
+| Files (backend)          | snake_case      | `flashcard_service.py`                 |
+| Components               | PascalCase      | `FlashcardList`                        |
+| Hooks                    | camelCase + use | `useFlashcards`                        |
+| Functions                | camelCase (TS)  | `fetchFlashcards`                      |
+| Functions                | snake_case (Py) | `get_flashcard_by_id`                  |
+| Constants                | SCREAMING_SNAKE | `MAX_TRANSCRIPT_LENGTH`, `NAV_ITEMS`   |
+| Types/Interfaces         | PascalCase      | `FlashcardCreate`, `VideoRead`         |
+| Boolean vars             | is/has prefix   | `isLoading`, `hasError`                |
+
+Frontend file extensions: **`.tsx`** for components, **`.ts`** for everything else.
+No `.jsx` / `.js` anywhere.
 
 ### Be Descriptive
 
@@ -95,15 +100,16 @@ const deduped = deduplicateChunks(transcript);
 
 ### Frontend
 
-```js
+```ts
 // In hooks — catch at the boundary, expose structured error state
-const [error, setError] = useState(null);
+const [error, setError] = useState<string | null>(null);
 
 try {
   const data = await fetchFlashcards();
   setFlashcards(data);
-} catch (err) {
-  setError(err.response?.data?.detail ?? "Unexpected error");
+} catch (err: unknown) {
+  const message = err instanceof Error ? err.message : "Unexpected error";
+  setError(message);
 }
 ```
 
@@ -146,10 +152,10 @@ if len(transcript) > MAX_TRANSCRIPT_CHARS:
 - One component per file (frontend)
 - One router per domain (backend)
 - Group by feature, not by type where it aids clarity
-- Index files (`index.js`) for clean imports from component folders:
+- Index files (`index.ts`) for clean imports from component folders:
 
-```js
-// components/flashcard-card/index.js
+```ts
+// components/flashcard-card/index.ts
 export { FlashcardCard } from "./FlashcardCard";
 ```
 
