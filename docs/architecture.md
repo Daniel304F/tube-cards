@@ -37,16 +37,22 @@ No cloud services are required except external APIs (YouTube, LLM providers, Not
 
 ## Request Flow
 
+### Single video
 1. User enters a YouTube URL in the browser
 2. Client sends `POST /videos/process` with the URL
-3. Router delegates to `VideoService`
-4. `VideoService` fetches transcript via `youtube-transcript-api`
-5. `VideoService` calls `LLMService` with the transcript
-6. `LLMService` sends prompt to configured provider via LiteLLM
-7. Response is parsed into `Flashcard` and `Summary` objects
-8. Objects are persisted to SQLite via SQLModel
-9. API returns the created objects
-10. Client renders flashcards and summaries
+3. Router delegates to `video_service.process`
+4. Service fetches transcript via `youtube-transcript-api`
+5. Service calls `llm.complete` (the only LiteLLM call site)
+6. Response is parsed into `Flashcard` and `Summary` objects
+7. Objects are persisted to SQLite via SQLModel
+8. API returns `VideoProcessResponse` (video + flashcards + summary)
+9. Client renders the result
+
+### Batch
+- `POST /videos/process-batch` accepts `{ "youtube_urls": [...] }`.
+- `video_service.process_batch` calls `process()` per URL **sequentially**.
+- A failure on one URL is captured (`success=false`, `error=...`) and the batch continues.
+- Response shape: `VideoBatchResponse { results, success_count, error_count }`.
 
 ## Layer Responsibilities
 
@@ -69,6 +75,8 @@ No cloud services are required except external APIs (YouTube, LLM providers, Not
 - SQLModel table definitions
 - Represent the database schema
 - No business logic
+- Current tables: `video`, `flashcard`, `summary`, `folder`, `tag`, `flashcard_tag`
+  (see `docs/entities.md` for fields and relationships)
 
 ### Schemas (`api/schemas/`)
 
@@ -84,6 +92,23 @@ No cloud services are required except external APIs (YouTube, LLM providers, Not
 - Abstracts provider differences (OpenAI, Anthropic, Ollama)
 - All other services call this — never LiteLLM directly
 
+## Routers & Services (current)
+
+| Router file        | Prefix         | Service              | Domain                                   |
+| ------------------ | -------------- | -------------------- | ---------------------------------------- |
+| `videos.py`        | `/videos`      | `video.py`           | Process URLs (single + batch), list/get  |
+| `flashcards.py`    | `/flashcards`  | `flashcard.py`       | CRUD on flashcards                       |
+| `summaries.py`     | `/summaries`   | `summary.py`         | CRUD on summaries                        |
+| `folders.py`       | `/folders`     | `folder.py`          | CRUD on folders, hierarchy               |
+| `tags.py`          | `/tags`        | `tag.py`             | CRUD on tags, attach/detach to cards     |
+| `search.py`        | `/search`      | `search.py`          | Search across cards/summaries            |
+| `study.py`         | `/study`       | `study.py`           | SM-2 spaced repetition                   |
+| `exports.py`       | `/exports`     | `notion.py`, `remnote.py` | Push internal data to external apps |
+| `config.py`        | `/config`      | `config.py`          | Read/write app settings                  |
+
+Plus `services/transcript.py` (YouTube transcript fetching) and `services/llm.py`
+(the only file that imports LiteLLM).
+
 ## Data Flow: Notion/Remnote Export
 
 The internal data model is the source of truth.
@@ -95,20 +120,13 @@ SQLite (source of truth)
     └─→ remnote.py   → Remnote API
 ```
 
-## Recommendation Engine Options
-
-User selects one of three strategies in the config:
-
-| Strategy      | Implementation                    |
-| ------------- | --------------------------------- |
-| LLM Search    | Semantic query via configured LLM |
-| Vector Search | SQLite-vec, local embeddings      |
-| YouTube       | YouTube Data API recommendations  |
-
 ## Self-Hosting
 
 - No authentication required — single user assumed
-- Database persists in `api/data/app.db`
+- Database persists in `api/data/app.db` (the `data/` folder must be created
+  manually on first start — see `CLAUDE.local.md`)
 - All config via environment variables (`.env`)
 - Designed to run on Raspberry Pi (low resource footprint)
-- `docker-compose.yml` orchestrates both services
+- Dev URLs: frontend `http://localhost:5173`, API `http://localhost:8000`
+- No Docker setup is checked in today; both services are started manually
+  (`uvicorn` for the API, `vite` for the client)
