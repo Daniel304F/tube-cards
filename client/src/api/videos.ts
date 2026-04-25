@@ -43,6 +43,26 @@ export async function processVideo(youtubeUrl: string): Promise<VideoProcessResu
   return response.data;
 }
 
+export interface BatchItemResult {
+  youtube_url: string;
+  success: boolean;
+  result: VideoProcessResult | null;
+  error: string | null;
+}
+
+export interface BatchResult {
+  results: BatchItemResult[];
+  success_count: number;
+  error_count: number;
+}
+
+export async function processBatch(youtubeUrls: string[]): Promise<BatchResult> {
+  const response = await client.post<BatchResult>("/videos/process-batch", {
+    youtube_urls: youtubeUrls,
+  });
+  return response.data;
+}
+
 export async function fetchVideos(): Promise<VideoData[]> {
   const response = await client.get<VideoData[]>("/videos/");
   return response.data;

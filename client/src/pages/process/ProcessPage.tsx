@@ -2,10 +2,14 @@ import { useState } from "react";
 import { Loader2, Play, RotateCcw, AlertCircle, MonitorPlay, BookOpen, FileText } from "lucide-react";
 import { useVideoProcessor } from "../../hooks/useVideoProcessor";
 import { FlashcardCard } from "../../components/flashcard-card";
+import { BatchProcessor } from "./BatchProcessor";
 
 const YOUTUBE_URL_REGEX = /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w-]{11}/;
 
+type Mode = "single" | "batch";
+
 export default function ProcessPage(): React.JSX.Element {
+  const [mode, setMode] = useState<Mode>("single");
   const [url, setUrl] = useState<string>("");
   const { result, isProcessing, error, process, reset } = useVideoProcessor();
 
@@ -105,6 +109,11 @@ export default function ProcessPage(): React.JSX.Element {
         </p>
       </div>
 
+      <ModeToggle mode={mode} onChange={setMode} />
+
+      {mode === "batch" ? (
+        <BatchProcessor />
+      ) : (
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <div>
           <label htmlFor="youtube-url" className="block text-sm font-medium text-text-base dark:text-dark-text mb-1">
@@ -163,6 +172,47 @@ export default function ProcessPage(): React.JSX.Element {
           )}
         </button>
       </form>
+      )}
+    </div>
+  );
+}
+
+interface ModeToggleProps {
+  mode: Mode;
+  onChange: (m: Mode) => void;
+}
+
+function ModeToggle({ mode, onChange }: ModeToggleProps): React.JSX.Element {
+  return (
+    <div
+      role="tablist"
+      className="
+        mb-6 inline-flex w-full
+        rounded-lg border border-border dark:border-dark-border
+        bg-white dark:bg-dark-card p-1
+      "
+    >
+      {(["single", "batch"] as const).map((m) => {
+        const isActive = mode === m;
+        return (
+          <button
+            key={m}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onChange(m)}
+            className={`
+              flex-1 rounded-md px-3 py-2 text-sm font-medium
+              transition-colors min-h-[44px]
+              ${isActive
+                ? "bg-brand text-white"
+                : "text-text-muted dark:text-dark-muted hover:text-text-base dark:hover:text-dark-text"}
+            `}
+          >
+            {m === "single" ? "Single URL" : "Batch"}
+          </button>
+        );
+      })}
     </div>
   );
 }
