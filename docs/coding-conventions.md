@@ -155,6 +155,50 @@ export { FlashcardCard } from "./FlashcardCard";
 
 ---
 
+## Test-Driven Development — REQUIRED
+
+This project develops new features and changes using TDD. The cycle is:
+
+1. **Define the goal in plain language** — what behavior must this code have?
+2. **Write the test first** — describe the desired behavior as an executable
+   assertion. The test must fail before any implementation exists.
+3. **Run the test, confirm it fails** for the right reason (missing function,
+   wrong return value — not an import error or fixture mistake).
+4. **Implement the smallest change** that makes the test pass. No speculative
+   features, no unrelated refactors in the same step.
+5. **Re-run the test, confirm it passes.** Then re-run the full suite to make
+   sure nothing else broke.
+6. **Refactor only with green tests.** If you change shape, the suite tells you
+   immediately whether behavior moved.
+
+### Rules
+
+- **Every new endpoint, service function, or non-trivial helper has tests** in
+  `api/tests/test_*.py` (backend) or alongside the file as `*.test.ts(x)`
+  (frontend) before it is shipped.
+- **Bug fixes start with a failing test** that reproduces the bug. Then fix.
+- **Don't mock the layer you're testing.** Mock external boundaries (LLM,
+  HTTP APIs, the filesystem when it would be destructive) — never the DB
+  unless there's a clear reason. The backend uses an in-memory SQLite per
+  test (`tests/conftest.py`).
+- **Tests must be independent.** No shared mutable state between tests. Each
+  test gets a fresh DB session via the `session` fixture.
+- **Name tests after behavior**, not implementation:
+  `test_returns_404_when_video_missing` — yes.
+  `test_get_by_id_calls_session_get` — no.
+- **Fail loudly in tests too.** A test that passes silently when its
+  assertion is removed is a bug in the test.
+
+### When TDD is overkill
+
+- Pure UI tweaks (color, padding, copy) without behavior change.
+- One-shot scripts not committed to the repo.
+- Spike code being thrown away the same day.
+
+Everything else: write the test first.
+
+---
+
 ## Git & Commits
 
 Commit message format: `type(scope): short description`
