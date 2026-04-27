@@ -25,7 +25,8 @@
       "mcp__playwright__browser_close",
       "mcp__playwright__browser_snapshot",
       "mcp__playwright__browser_click",
-      "mcp__playwright__browser_take_screenshot"
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(curl -s -o /dev/null -w \"API jobs endpoint: %{http_code}\\\\n\" http://localhost:8000/jobs/)"
     ]
   }
 }

@@ -26,6 +26,7 @@
 | `Folder`       | `folder`          | Hierarchical grouping for flashcards/summaries           |
 | `Tag`          | `tag`             | Free-form label for flashcards (color-coded)             |
 | `FlashcardTag` | `flashcard_tag`   | Association table — many-to-many Flashcard ↔ Tag         |
+| `BatchJob`     | `batch_job`       | One queued URL waiting to be processed in the background |
 
 ---
 
@@ -155,6 +156,32 @@ Pure association — no payload. Add a payload field here only if it's truly per
 
 ---
 
+## Entity: BatchJob
+
+**Table:** `batch_job` · **Model:** `api/models/batch_job.py`
+
+| Field          | Type           | Default       | Notes                                                |
+| -------------- | -------------- | ------------- | ---------------------------------------------------- |
+| `id`           | `int` PK       | autoincrement |                                                      |
+| `youtube_url`  | `str`          | required      | The URL the user queued                              |
+| `status`       | `str`          | `"pending"`   | One of: `pending`, `running`, `done`, `failed`       |
+| `error`        | `str?`         | `None`        | Set when `status="failed"`                           |
+| `video_id`     | `int?` FK      | `None`        | → `video.id`, set when `status="done"`               |
+| `created_at`   | `datetime`     | `utcnow`      | When the user queued the URL                         |
+| `started_at`   | `datetime?`    | `None`        | Set when worker picks it up                          |
+| `finished_at`  | `datetime?`    | `None`        | Set when status becomes `done` or `failed`           |
+
+**Lifecycle:** `pending` → `running` (worker picks it) → `done` (success, links to
+the produced `Video`) **or** `failed` (`error` populated). On API startup any
+stuck `running` jobs are reset to `pending` so a crashed worker doesn't leave
+orphans.
+
+**Worker:** an asyncio task started in `main.py` lifespan polls the table for
+the oldest `pending` job and processes one at a time via
+`video_service.process()`.
+
+---
+
 ## Schemas vs Models — naming
 
 For every entity `X` you usually have:
@@ -194,3 +221,6 @@ Before adding a field, ask:
 
 - **2026-04-25** — Initial entity reference written. Covers Video, Flashcard, Summary,
   Folder, Tag, FlashcardTag as they exist on `main` after the batch-processing feature.
+- **2026-04-25** — Added `BatchJob` entity for the persistent background queue
+  (Feature 2b). Lifecycle: pending → running → done/failed. Worker resets stuck
+  `running` jobs on startup.
