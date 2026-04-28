@@ -29,7 +29,8 @@
       "Bash(curl -s -o /dev/null -w \"API jobs endpoint: %{http_code}\\\\n\" http://localhost:8000/jobs/)",
       "Bash(python -m pytest --tb=no -q)",
       "Bash(.venv/Scripts/python.exe -m pytest --tb=no -q)",
-      "Bash(npx vitest *)"
+      "Bash(npx vitest *)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/test_jobs.py tests/test_batch.py tests/test_playlist.py tests/test_videos.py -v --tb=short)"
     ]
   }
 }
