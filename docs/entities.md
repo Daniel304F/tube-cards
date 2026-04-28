@@ -229,3 +229,10 @@ Before adding a field, ask:
   endpoints; UI prevents removing `running` jobs (which would race with the
   worker), backend allows it for now — see api/CLAUDE.md for the deferred
   hardening note.
+- **2026-04-28** — Regenerate video (no entity change). `POST /videos/{id}/regenerate`
+  replaces a video's `Flashcard`s and `Summary`s by deleting them and re-running
+  the LLM pipeline against the stored `Video.transcript`. **Overwrite semantics —
+  not versioned**: folder/tag assignments on the old flashcards are lost. If
+  history-preservation becomes a requirement later, add a `generation: int`
+  field to `Flashcard`/`Summary` (or a new `VideoGeneration` entity) — both
+  paths are open since today's regenerate doesn't write any historical breadcrumb.
