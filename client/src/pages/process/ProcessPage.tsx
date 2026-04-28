@@ -4,10 +4,11 @@ import { useVideoProcessor } from "../../hooks/useVideoProcessor";
 import { FlashcardCard } from "../../components/flashcard-card";
 import { BatchProcessor } from "./BatchProcessor";
 import { PlaylistProcessor } from "./PlaylistProcessor";
+import { JobQueue } from "./JobQueue";
 
 const YOUTUBE_URL_REGEX = /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w-]{11}/;
 
-type Mode = "single" | "batch" | "playlist";
+type Mode = "single" | "batch" | "playlist" | "queue";
 
 export default function ProcessPage(): React.JSX.Element {
   const [mode, setMode] = useState<Mode>("single");
@@ -96,8 +97,10 @@ export default function ProcessPage(): React.JSX.Element {
     );
   }
 
+  const containerWidth = mode === "queue" ? "max-w-3xl" : "max-w-xl";
+
   return (
-    <div className="max-w-xl mx-auto">
+    <div className={`${containerWidth} mx-auto`}>
       <div className="text-center mb-8">
         <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-brand-surface dark:bg-dark-surface mb-4">
           <MonitorPlay className="size-8 text-brand" />
@@ -116,6 +119,8 @@ export default function ProcessPage(): React.JSX.Element {
         <BatchProcessor />
       ) : mode === "playlist" ? (
         <PlaylistProcessor />
+      ) : mode === "queue" ? (
+        <JobQueue />
       ) : (
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <div>
@@ -195,9 +200,16 @@ function ModeToggle({ mode, onChange }: ModeToggleProps): React.JSX.Element {
         bg-white dark:bg-dark-card p-1
       "
     >
-      {(["single", "batch", "playlist"] as const).map((m) => {
+      {(["single", "batch", "playlist", "queue"] as const).map((m) => {
         const isActive = mode === m;
-        const label = m === "single" ? "Single URL" : m === "batch" ? "Batch" : "Playlist";
+        const label =
+          m === "single"
+            ? "Single URL"
+            : m === "batch"
+            ? "Batch"
+            : m === "playlist"
+            ? "Playlist"
+            : "Queue";
         return (
           <button
             key={m}
