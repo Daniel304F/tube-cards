@@ -6,6 +6,7 @@ import {
   Clock,
   Loader2,
   Plus,
+  RotateCcw,
   Trash2,
   XCircle,
   type LucideIcon,
@@ -139,7 +140,12 @@ export function JobQueue(): React.JSX.Element {
         ) : (
           <ul className="space-y-2">
             {jobs.map((job) => (
-              <JobRow key={job.id} job={job} onRemove={remove} />
+              <JobRow
+                key={job.id}
+                job={job}
+                onRemove={remove}
+                onRetry={(url) => enqueue([url])}
+              />
             ))}
           </ul>
         )}
@@ -151,10 +157,12 @@ export function JobQueue(): React.JSX.Element {
 interface JobRowProps {
   job: JobData;
   onRemove: (id: number) => Promise<void>;
+  onRetry: (url: string) => Promise<void>;
 }
 
-function JobRow({ job, onRemove }: JobRowProps): React.JSX.Element {
+function JobRow({ job, onRemove, onRetry }: JobRowProps): React.JSX.Element {
   const canRemove = job.status === "pending" || job.status === "failed" || job.status === "done";
+  const canRetry = job.status === "failed";
 
   return (
     <li
@@ -174,6 +182,24 @@ function JobRow({ job, onRemove }: JobRowProps): React.JSX.Element {
           </p>
         )}
       </div>
+      {canRetry && (
+        <button
+          type="button"
+          aria-label="Retry job"
+          onClick={() => void onRetry(job.youtube_url)}
+          className="
+            inline-flex items-center justify-center
+            size-9 rounded-md
+            text-text-muted dark:text-dark-muted
+            transition-colors
+            hover:text-brand hover:bg-brand-surface dark:hover:bg-dark-surface
+            focus:outline-none focus:ring-2 focus:ring-brand
+            shrink-0
+          "
+        >
+          <RotateCcw className="size-4" />
+        </button>
+      )}
       {canRemove && (
         <button
           type="button"
