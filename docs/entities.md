@@ -224,3 +224,8 @@ Before adding a field, ask:
 - **2026-04-25** — Added `BatchJob` entity for the persistent background queue
   (Feature 2b). Lifecycle: pending → running → done/failed. Worker resets stuck
   `running` jobs on startup.
+- **2026-04-28** — `BatchJob` queue UI completed (no entity change). New
+  `JobQueue` component on the Process page surfaces the existing `/jobs/`
+  endpoints; UI prevents removing `running` jobs (which would race with the
+  worker), backend allows it for now — see api/CLAUDE.md for the deferred
+  hardening note.
