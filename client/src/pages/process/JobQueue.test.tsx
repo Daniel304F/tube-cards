@@ -196,6 +196,42 @@ describe("JobQueue", () => {
     expect(screen.getByRole("button", { name: /clear finished/i })).toBeInTheDocument();
   });
 
+  it("renders a Retry button on failed jobs", () => {
+    setHookState({
+      jobs: [makeJob({ id: 5, youtube_url: "https://youtu.be/x", status: "failed", error: "boom" })],
+    });
+
+    renderInRouter();
+
+    expect(screen.getByRole("button", { name: /retry job/i })).toBeInTheDocument();
+  });
+
+  it("Retry button on a failed job re-enqueues the URL", async () => {
+    const state = setHookState({
+      jobs: [makeJob({ id: 5, youtube_url: "https://youtu.be/x", status: "failed", error: "boom" })],
+    });
+    const user = userEvent.setup();
+
+    renderInRouter();
+    await user.click(screen.getByRole("button", { name: /retry job/i }));
+
+    expect(state.enqueue).toHaveBeenCalledWith(["https://youtu.be/x"]);
+  });
+
+  it("does not render a Retry button on non-failed jobs", () => {
+    setHookState({
+      jobs: [
+        makeJob({ id: 1, status: "pending" }),
+        makeJob({ id: 2, status: "running" }),
+        makeJob({ id: 3, status: "done", video_id: 99 }),
+      ],
+    });
+
+    renderInRouter();
+
+    expect(screen.queryByRole("button", { name: /retry job/i })).not.toBeInTheDocument();
+  });
+
   it("renders the URL of a done job as a link to /history?expand=<video_id>", () => {
     setHookState({
       jobs: [makeJob({ id: 7, youtube_url: "https://youtu.be/c", status: "done", video_id: 99 })],
