@@ -1,12 +1,16 @@
-"""Tests for /export router + notion/remnote services."""
+"""Tests for /export router + notion/remnote/anki services."""
+import zipfile
+from io import BytesIO
 from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
 from core.config import settings
+from services import anki as anki_service
 from services import notion as notion_service
 from services import remnote as remnote_service
 
@@ -131,3 +135,87 @@ class TestExportRouter:
         body = response.json()
         assert body["exported_flashcards"] == 0
         assert body["exported_summaries"] == 0
+
+
+class TestAnkiService:
+    def test_returns_apkg_zip_bytes(
+        self, session: Session, make_video, make_flashcard
+    ) -> None:
+        v = make_video()
+        fc = make_flashcard(v.id, question="Q1", answer="A1")
+
+        data = anki_service.export_flashcards(session, [fc.id])
+
+        # .apkg files are zip archives — must start with the PK magic header.
+        assert data[:2] == b"PK"
+        assert len(data) > 100
+
+    def test_zip_contains_anki_collection_db(
+        self, session: Session, make_video, make_flashcard
+    ) -> None:
+        v = make_video()
+        fc1 = make_flashcard(v.id, question="Q1", answer="A1")
+        fc2 = make_flashcard(v.id, question="Q2", answer="A2")
+
+        data = anki_service.export_flashcards(session, [fc1.id, fc2.id])
+
+        with zipfile.ZipFile(BytesIO(data)) as z:
+            names = z.namelist()
+        assert any(n.startswith("collection.anki") for n in names), (
+            f"expected an Anki collection DB in the package; got {names!r}"
+        )
+
+    def test_404_for_unknown_flashcard(self, session: Session) -> None:
+        with pytest.raises(HTTPException) as exc:
+            anki_service.export_flashcards(session, [9999])
+
+        assert exc.value.status_code == 404
+
+    def test_empty_list_raises_422(self, session: Session) -> None:
+        with pytest.raises(HTTPException) as exc:
+            anki_service.export_flashcards(session, [])
+
+        assert exc.value.status_code == 422
+
+
+class TestAnkiRouter:
+    def test_endpoint_returns_apkg_download(
+        self, client: TestClient, make_video, make_flashcard
+    ) -> None:
+        v = make_video()
+        fc = make_flashcard(v.id)
+
+        response = client.post(
+            "/export/anki", json={"flashcard_ids": [fc.id], "summary_ids": []}
+        )
+
+        assert response.status_code == 200
+        assert response.content[:2] == b"PK"
+        # Sane content-type and a downloadable filename
+        ctype = response.headers.get("content-type", "")
+        assert "octet-stream" in ctype or "anki" in ctype.lower()
+        disposition = response.headers.get("content-disposition", "")
+        assert "attachment" in disposition.lower()
+        assert ".apkg" in disposition.lower()
+
+    def test_endpoint_silently_skips_summary_ids(
+        self, client: TestClient, make_video, make_flashcard, make_summary
+    ) -> None:
+        v = make_video()
+        fc = make_flashcard(v.id)
+        s = make_summary(v.id)
+
+        response = client.post(
+            "/export/anki",
+            json={"flashcard_ids": [fc.id], "summary_ids": [s.id]},
+        )
+
+        assert response.status_code == 200
+        assert response.content[:2] == b"PK"
+
+    def test_endpoint_422_for_empty_flashcards(self, client: TestClient) -> None:
+        response = client.post(
+            "/export/anki", json={"flashcard_ids": [], "summary_ids": []}
+        )
+
+        assert response.status_code == 422

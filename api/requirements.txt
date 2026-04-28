@@ -6,3 +6,4 @@ litellm
 youtube-transcript-api
 yt-dlp
 httpx
+genanki
