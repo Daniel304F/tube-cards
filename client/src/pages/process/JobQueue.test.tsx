@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { JobData } from "../../api/jobs";
@@ -11,6 +12,14 @@ vi.mock("../../hooks/useJobs", () => ({
 }));
 
 import { JobQueue } from "./JobQueue";
+
+function renderInRouter(): ReturnType<typeof render> {
+  return render(
+    <MemoryRouter>
+      <JobQueue />
+    </MemoryRouter>,
+  );
+}
 
 function makeJob(overrides: Partial<JobData> = {}): JobData {
   return {
@@ -59,7 +68,7 @@ describe("JobQueue", () => {
   it("shows a loading state on initial load", () => {
     setHookState({ isLoading: true });
 
-    render(<JobQueue />);
+    renderInRouter();
 
     expect(screen.getByTestId("job-queue-loading")).toBeInTheDocument();
   });
@@ -67,7 +76,7 @@ describe("JobQueue", () => {
   it("shows an error banner when loading fails", () => {
     setHookState({ error: "boom" });
 
-    render(<JobQueue />);
+    renderInRouter();
 
     expect(screen.getByText(/boom/i)).toBeInTheDocument();
   });
@@ -75,7 +84,7 @@ describe("JobQueue", () => {
   it("shows an empty state when no jobs are queued", () => {
     setHookState({ jobs: [] });
 
-    render(<JobQueue />);
+    renderInRouter();
 
     expect(screen.getByText(/no jobs/i)).toBeInTheDocument();
   });
@@ -90,7 +99,7 @@ describe("JobQueue", () => {
       ],
     });
 
-    render(<JobQueue />);
+    renderInRouter();
 
     expect(screen.getByText("https://youtu.be/a")).toBeInTheDocument();
     expect(screen.getByText("https://youtu.be/b")).toBeInTheDocument();
@@ -107,7 +116,7 @@ describe("JobQueue", () => {
     const state = setHookState({});
     const user = userEvent.setup();
 
-    render(<JobQueue />);
+    renderInRouter();
 
     const textarea = screen.getByLabelText(/youtube urls/i) as HTMLTextAreaElement;
     await user.type(
@@ -126,7 +135,7 @@ describe("JobQueue", () => {
   it("disables the submit button when textarea is empty", () => {
     setHookState({});
 
-    render(<JobQueue />);
+    renderInRouter();
 
     const button = screen.getByRole("button", { name: /add to queue/i });
     expect(button).toBeDisabled();
@@ -135,7 +144,7 @@ describe("JobQueue", () => {
   it("does not submit when only whitespace is entered", async () => {
     const state = setHookState({});
 
-    render(<JobQueue />);
+    renderInRouter();
 
     const textarea = screen.getByLabelText(/youtube urls/i);
     fireEvent.change(textarea, { target: { value: "   \n  \n" } });
@@ -150,7 +159,7 @@ describe("JobQueue", () => {
     });
     const user = userEvent.setup();
 
-    render(<JobQueue />);
+    renderInRouter();
 
     await user.click(screen.getByRole("button", { name: /remove job/i }));
 
@@ -162,7 +171,7 @@ describe("JobQueue", () => {
       jobs: [makeJob({ id: 9, status: "running" })],
     });
 
-    render(<JobQueue />);
+    renderInRouter();
 
     expect(screen.queryByRole("button", { name: /remove job/i })).not.toBeInTheDocument();
   });
@@ -171,16 +180,45 @@ describe("JobQueue", () => {
     setHookState({
       jobs: [makeJob({ id: 1, status: "pending" })],
     });
-    const { rerender } = render(<JobQueue />);
+    const { rerender } = renderInRouter();
 
     expect(screen.queryByRole("button", { name: /clear finished/i })).not.toBeInTheDocument();
 
     setHookState({
       jobs: [makeJob({ id: 2, status: "done", video_id: 99 })],
     });
-    rerender(<JobQueue />);
+    rerender(
+      <MemoryRouter>
+        <JobQueue />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByRole("button", { name: /clear finished/i })).toBeInTheDocument();
+  });
+
+  it("renders the URL of a done job as a link to /history?expand=<video_id>", () => {
+    setHookState({
+      jobs: [makeJob({ id: 7, youtube_url: "https://youtu.be/c", status: "done", video_id: 99 })],
+    });
+
+    renderInRouter();
+
+    const link = screen.getByRole("link", { name: "https://youtu.be/c" });
+    expect(link).toHaveAttribute("href", "/history?expand=99");
+  });
+
+  it("does not render a link for non-done jobs", () => {
+    setHookState({
+      jobs: [
+        makeJob({ id: 1, youtube_url: "https://youtu.be/p", status: "pending" }),
+        makeJob({ id: 2, youtube_url: "https://youtu.be/r", status: "running" }),
+        makeJob({ id: 3, youtube_url: "https://youtu.be/f", status: "failed", error: "x" }),
+      ],
+    });
+
+    renderInRouter();
+
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
   it("'Clear finished' calls clearFinished", async () => {
@@ -189,7 +227,7 @@ describe("JobQueue", () => {
     });
     const user = userEvent.setup();
 
-    render(<JobQueue />);
+    renderInRouter();
 
     await user.click(screen.getByRole("button", { name: /clear finished/i }));
 
