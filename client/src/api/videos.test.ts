@@ -6,7 +6,7 @@ vi.mock("./client", () => ({
   default: { post: (...args: unknown[]) => postMock(...args) },
 }));
 
-import { processBatch, processPlaylist } from "./videos";
+import { processBatch, processPlaylist, regenerateVideo } from "./videos";
 
 describe("processBatch", () => {
   beforeEach(() => {
@@ -37,6 +37,53 @@ describe("processBatch", () => {
     postMock.mockResolvedValueOnce({ data: payload });
 
     const result = await processBatch(["https://youtu.be/a", "https://youtu.be/b"]);
+
+    expect(result).toEqual(payload);
+  });
+});
+
+describe("regenerateVideo", () => {
+  beforeEach(() => {
+    postMock.mockReset();
+  });
+
+  it("posts to /videos/<id>/regenerate", async () => {
+    postMock.mockResolvedValueOnce({
+      data: {
+        video: {
+          id: 7,
+          youtube_url: "https://youtu.be/x",
+          title: "T",
+          transcript: "t",
+          processed_at: null,
+          created_at: "",
+        },
+        flashcards: [],
+        summary: { id: 1, content: "s", video_id: 7, folder_id: null, created_at: "", updated_at: "" },
+      },
+    });
+
+    await regenerateVideo(7);
+
+    expect(postMock).toHaveBeenCalledWith("/videos/7/regenerate");
+  });
+
+  it("returns the new VideoProcessResult", async () => {
+    const payload = {
+      video: {
+        id: 7,
+        youtube_url: "https://youtu.be/x",
+        title: "T",
+        transcript: "t",
+        processed_at: null,
+        created_at: "",
+      },
+      flashcards: [],
+      summary: { id: 9, content: "fresh", video_id: 7, folder_id: null, created_at: "", updated_at: "" },
+    };
+    postMock.mockResolvedValueOnce({ data: payload });
+
+    const result = await regenerateVideo(7);
 
     expect(result).toEqual(payload);
   });

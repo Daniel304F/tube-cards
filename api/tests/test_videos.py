@@ -1,7 +1,14 @@
 """Tests for video read endpoints (process is skipped — requires LLM + network)."""
-from fastapi.testclient import TestClient
-from sqlmodel import Session
+from unittest.mock import AsyncMock, patch
 
+import pytest
+from fastapi import HTTPException
+from fastapi.testclient import TestClient
+from sqlmodel import Session, select
+
+from models.flashcard import Flashcard
+from models.summary import Summary
+from models.video import Video
 from services import video as video_service
 
 
@@ -88,3 +95,105 @@ class TestVideoRouter:
         response = client.get("/videos/999")
 
         assert response.status_code == 404
+
+
+def _llm_responses() -> AsyncMock:
+    """Return an AsyncMock that yields (flashcards-JSON, summary-text) on successive calls."""
+    return AsyncMock(
+        side_effect=[
+            '[{"question": "NEW Q", "answer": "NEW A"}]',
+            "NEW SUMMARY",
+        ]
+    )
+
+
+class TestRegenerateService:
+    @pytest.mark.asyncio
+    async def test_replaces_flashcards_and_summary(
+        self, session: Session, make_video, make_flashcard, make_summary
+    ) -> None:
+        v = make_video(transcript="some transcript")
+        old_fc = make_flashcard(v.id, question="OLD Q")
+        old_sum = make_summary(v.id, content="OLD SUM")
+
+        with patch("services.llm.complete", new=_llm_responses()):
+            result = await video_service.regenerate(session, v.id)
+
+        # Old rows are gone
+        remaining_fc_ids = [
+            fc.id
+            for fc in session.exec(select(Flashcard).where(Flashcard.video_id == v.id)).all()
+        ]
+        remaining_sum_ids = [
+            s.id
+            for s in session.exec(select(Summary).where(Summary.video_id == v.id)).all()
+        ]
+        assert old_fc.id not in remaining_fc_ids
+        assert old_sum.id not in remaining_sum_ids
+
+        # New rows reflect mocked LLM output
+        assert any(fc.question == "NEW Q" for fc in result.flashcards)
+        assert result.summary.content == "NEW SUMMARY"
+
+    @pytest.mark.asyncio
+    async def test_keeps_video_row_and_url(
+        self, session: Session, make_video
+    ) -> None:
+        v = make_video(transcript="t")
+        original_url = v.youtube_url
+
+        with patch("services.llm.complete", new=_llm_responses()):
+            await video_service.regenerate(session, v.id)
+
+        v_after = session.get(Video, v.id)
+        assert v_after is not None
+        assert v_after.id == v.id
+        assert v_after.youtube_url == original_url
+
+    @pytest.mark.asyncio
+    async def test_updates_processed_at(
+        self, session: Session, make_video
+    ) -> None:
+        from datetime import datetime, timedelta
+
+        v = make_video(transcript="t")
+        v.processed_at = datetime.utcnow() - timedelta(days=1)
+        session.add(v)
+        session.commit()
+        old_processed = v.processed_at
+
+        with patch("services.llm.complete", new=_llm_responses()):
+            await video_service.regenerate(session, v.id)
+
+        v_after = session.get(Video, v.id)
+        assert v_after.processed_at is not None
+        assert v_after.processed_at > old_processed
+
+    @pytest.mark.asyncio
+    async def test_404_for_unknown_video(self, session: Session) -> None:
+        with pytest.raises(HTTPException) as exc:
+            await video_service.regenerate(session, 9999)
+
+        assert exc.value.status_code == 404
+
+
+class TestRegenerateRouter:
+    def test_endpoint_returns_process_response(
+        self, client: TestClient, make_video, make_flashcard, make_summary
+    ) -> None:
+        v = make_video(transcript="t")
+        make_flashcard(v.id, question="OLD")
+        make_summary(v.id, content="OLD")
+
+        with patch("services.llm.complete", new=_llm_responses()):
+            resp = client.post(f"/videos/{v.id}/regenerate")
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["video"]["id"] == v.id
+        assert any(fc["question"] == "NEW Q" for fc in body["flashcards"])
+        assert body["summary"]["content"] == "NEW SUMMARY"
+
+    def test_endpoint_404_for_unknown_video(self, client: TestClient) -> None:
+        resp = client.post("/videos/9999/regenerate")
+        assert resp.status_code == 404
