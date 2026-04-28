@@ -94,3 +94,18 @@ def delete(session: Session, flashcard_id: int) -> None:
 
     session.delete(flashcard)
     session.commit()
+
+
+def delete_by_video(session: Session, video_id: int) -> None:
+    """Remove every flashcard belonging to a video, cascading FlashcardTag links."""
+    flashcards = list(
+        session.exec(select(Flashcard).where(Flashcard.video_id == video_id)).all()
+    )
+    for fc in flashcards:
+        links = session.exec(
+            select(FlashcardTag).where(FlashcardTag.flashcard_id == fc.id)
+        ).all()
+        for link in links:
+            session.delete(link)
+        session.delete(fc)
+    session.commit()

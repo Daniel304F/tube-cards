@@ -83,6 +83,34 @@ async def process(session: Session, youtube_url: str) -> VideoProcessResponse:
     )
 
 
+async def regenerate(session: Session, video_id: int) -> VideoProcessResponse:
+    """Re-run the LLM pipeline on an existing video, replacing its flashcards and summary.
+
+    Reuses the transcript already stored on the video (no YouTube refetch). Old flashcards,
+    their tag links, and existing summaries are deleted before new ones are generated.
+    """
+    video = get_or_404(session, Video, video_id)
+
+    flashcard_service.delete_by_video(session, video_id)
+    summary_service.delete_by_video(session, video_id)
+
+    flashcards = await _generate_flashcards(session, video.id, video.transcript)
+    summary = await _generate_summary(session, video.id, video.transcript)
+
+    video.processed_at = datetime.utcnow()
+    session.add(video)
+    session.commit()
+    session.refresh(video)
+
+    logger.info("Regenerated video_id=%d: %d flashcards", video.id, len(flashcards))
+
+    return VideoProcessResponse(
+        video=VideoRead.model_validate(video),
+        flashcards=[FlashcardRead.model_validate(fc) for fc in flashcards],
+        summary=SummaryRead.model_validate(summary),
+    )
+
+
 async def process_batch(
     session: Session, youtube_urls: list[str]
 ) -> list[VideoBatchItemResult]:

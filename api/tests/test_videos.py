@@ -113,23 +113,23 @@ class TestRegenerateService:
         self, session: Session, make_video, make_flashcard, make_summary
     ) -> None:
         v = make_video(transcript="some transcript")
-        old_fc = make_flashcard(v.id, question="OLD Q")
-        old_sum = make_summary(v.id, content="OLD SUM")
+        make_flashcard(v.id, question="OLD Q")
+        make_summary(v.id, content="OLD SUM")
 
         with patch("services.llm.complete", new=_llm_responses()):
             result = await video_service.regenerate(session, v.id)
 
-        # Old rows are gone
-        remaining_fc_ids = [
-            fc.id
+        # Old content is gone (compared by content — SQLite reuses deleted PKs)
+        remaining_questions = [
+            fc.question
             for fc in session.exec(select(Flashcard).where(Flashcard.video_id == v.id)).all()
         ]
-        remaining_sum_ids = [
-            s.id
+        remaining_summaries = [
+            s.content
             for s in session.exec(select(Summary).where(Summary.video_id == v.id)).all()
         ]
-        assert old_fc.id not in remaining_fc_ids
-        assert old_sum.id not in remaining_sum_ids
+        assert "OLD Q" not in remaining_questions
+        assert "OLD SUM" not in remaining_summaries
 
         # New rows reflect mocked LLM output
         assert any(fc.question == "NEW Q" for fc in result.flashcards)

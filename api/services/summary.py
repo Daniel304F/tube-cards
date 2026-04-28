@@ -47,3 +47,13 @@ def delete(session: Session, summary_id: int) -> None:
     summary = get_or_404(session, Summary, summary_id)
     session.delete(summary)
     session.commit()
+
+
+def delete_by_video(session: Session, video_id: int) -> None:
+    """Remove every summary belonging to a video."""
+    summaries = list(
+        session.exec(select(Summary).where(Summary.video_id == video_id)).all()
+    )
+    for s in summaries:
+        session.delete(s)
+    session.commit()

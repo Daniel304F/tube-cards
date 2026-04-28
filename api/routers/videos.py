@@ -38,6 +38,14 @@ async def process_video(
     return await video_service.process(session, data.youtube_url)
 
 
+@router.post("/{video_id}/regenerate", response_model=VideoProcessResponse)
+async def regenerate_video(
+    video_id: int,
+    session: Session = Depends(get_session),
+) -> VideoProcessResponse:
+    return await video_service.regenerate(session, video_id)
+
+
 @router.post("/process-batch", response_model=VideoBatchResponse, status_code=201)
 async def process_videos_batch(
     data: VideoBatchRequest,
