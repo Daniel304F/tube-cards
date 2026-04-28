@@ -8,12 +8,15 @@ import { FlashcardCard } from "../../components/flashcard-card";
 import { FolderPicker } from "../../components/folder-picker";
 import { TagPicker } from "../../components/tag-picker";
 import { EditableText } from "../../components/editable-text";
-import { exportToNotion, exportToRemnote } from "../../api/exports";
+import { exportToAnki, exportToNotion, exportToRemnote } from "../../api/exports";
 import { updateFlashcard } from "../../api/flashcards";
 import { updateSummary } from "../../api/summaries";
 import { regenerateVideo } from "../../api/videos";
 import { attachTag, detachTag, type TagData } from "../../api/tags";
 import type { FlashcardData, SummaryData } from "../../api/videos";
+import { triggerBlobDownload } from "../../lib/download";
+
+const ANKI_FILENAME = "tubecards-export.apkg";
 import type { FolderData } from "../../api/folders";
 import axios from "axios";
 
@@ -30,6 +33,43 @@ function HistorySkeleton(): React.JSX.Element {
   );
 }
 
+interface ExportButtonProps {
+  label: string;
+  isLoading: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}
+
+function ExportButton({ label, isLoading, disabled, onClick }: ExportButtonProps): React.JSX.Element {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="
+        inline-flex items-center gap-1.5
+        rounded-md border border-border dark:border-dark-border bg-white dark:bg-dark-card
+        px-3 py-1.5
+        text-xs font-medium text-text-base dark:text-dark-text
+        transition-colors hover:bg-brand-surface dark:hover:bg-dark-surface
+        disabled:opacity-50
+        min-h-[36px]
+      "
+    >
+      {isLoading ? <Loader2 className="size-3 animate-spin" /> : <Upload className="size-3" />}
+      {label}
+    </button>
+  );
+}
+
+function _detailFromError(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err)) {
+    const detail = err.response?.data?.detail;
+    return typeof detail === "string" ? detail : fallback;
+  }
+  return fallback;
+}
+
 interface ExportButtonsProps {
   flashcardIds: number[];
   summaryIds: number[];
@@ -39,7 +79,7 @@ function ExportButtons({ flashcardIds, summaryIds }: ExportButtonsProps): React.
   const [exporting, setExporting] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  async function handleExport(target: "notion" | "remnote"): Promise<void> {
+  async function handlePushExport(target: "notion" | "remnote"): Promise<void> {
     setExporting(target);
     setMessage(null);
     try {
@@ -47,53 +87,48 @@ function ExportButtons({ flashcardIds, summaryIds }: ExportButtonsProps): React.
       const result = await fn({ flashcard_ids: flashcardIds, summary_ids: summaryIds });
       setMessage(result.message);
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        const detail = err.response?.data?.detail;
-        setMessage(typeof detail === "string" ? detail : `Export to ${target} failed.`);
-      } else {
-        setMessage(`Export to ${target} failed.`);
-      }
+      setMessage(_detailFromError(err, `Export to ${target} failed.`));
     } finally {
       setExporting(null);
     }
   }
 
+  async function handleAnkiExport(): Promise<void> {
+    setExporting("anki");
+    setMessage(null);
+    try {
+      const blob = await exportToAnki(flashcardIds);
+      triggerBlobDownload(blob, ANKI_FILENAME);
+      setMessage(`Downloaded ${flashcardIds.length} flashcard${flashcardIds.length === 1 ? "" : "s"} as ${ANKI_FILENAME}.`);
+    } catch (err: unknown) {
+      setMessage(_detailFromError(err, "Anki export failed."));
+    } finally {
+      setExporting(null);
+    }
+  }
+
+  const isAny = exporting !== null;
+
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button
-        type="button"
-        onClick={() => void handleExport("notion")}
-        disabled={exporting !== null}
-        className="
-          inline-flex items-center gap-1.5
-          rounded-md border border-border dark:border-dark-border bg-white dark:bg-dark-card
-          px-3 py-1.5
-          text-xs font-medium text-text-base dark:text-dark-text
-          transition-colors hover:bg-brand-surface dark:hover:bg-dark-surface
-          disabled:opacity-50
-          min-h-[36px]
-        "
-      >
-        {exporting === "notion" ? <Loader2 className="size-3 animate-spin" /> : <Upload className="size-3" />}
-        Notion
-      </button>
-      <button
-        type="button"
-        onClick={() => void handleExport("remnote")}
-        disabled={exporting !== null}
-        className="
-          inline-flex items-center gap-1.5
-          rounded-md border border-border dark:border-dark-border bg-white dark:bg-dark-card
-          px-3 py-1.5
-          text-xs font-medium text-text-base dark:text-dark-text
-          transition-colors hover:bg-brand-surface dark:hover:bg-dark-surface
-          disabled:opacity-50
-          min-h-[36px]
-        "
-      >
-        {exporting === "remnote" ? <Loader2 className="size-3 animate-spin" /> : <Upload className="size-3" />}
-        Remnote
-      </button>
+      <ExportButton
+        label="Notion"
+        isLoading={exporting === "notion"}
+        disabled={isAny}
+        onClick={() => void handlePushExport("notion")}
+      />
+      <ExportButton
+        label="Remnote"
+        isLoading={exporting === "remnote"}
+        disabled={isAny}
+        onClick={() => void handlePushExport("remnote")}
+      />
+      <ExportButton
+        label="Anki"
+        isLoading={exporting === "anki"}
+        disabled={isAny || flashcardIds.length === 0}
+        onClick={() => void handleAnkiExport()}
+      />
       {message && (
         <span className="text-xs text-text-muted dark:text-dark-muted">{message}</span>
       )}

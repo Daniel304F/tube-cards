@@ -20,3 +20,12 @@ export async function exportToRemnote(data: ExportRequest): Promise<ExportRespon
   const response = await client.post<ExportResponse>("/export/remnote", data);
   return response.data;
 }
+
+export async function exportToAnki(flashcardIds: number[]): Promise<Blob> {
+  const response = await client.post<Blob>(
+    "/export/anki",
+    { flashcard_ids: flashcardIds, summary_ids: [] },
+    { responseType: "blob" },
+  );
+  return response.data;
+}
