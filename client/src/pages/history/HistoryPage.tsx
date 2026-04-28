@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Clock, BookOpen, FileText, ChevronDown, ChevronRight, AlertCircle, Loader2, Upload } from "lucide-react";
 import { useHistory } from "../../hooks/useHistory";
 import { useFolders } from "../../hooks/useFolders";
@@ -102,6 +103,7 @@ function ExportButtons({ flashcardIds, summaryIds }: ExportButtonsProps): React.
 interface VideoSectionProps {
   title: string;
   createdAt: string;
+  defaultOpen?: boolean;
   flashcards: FlashcardData[];
   summaries: SummaryData[];
   folders: FolderData[];
@@ -118,6 +120,7 @@ interface VideoSectionProps {
 function VideoSection({
   title,
   createdAt,
+  defaultOpen = false,
   flashcards,
   summaries,
   folders,
@@ -130,7 +133,7 @@ function VideoSection({
   onEditFlashcard,
   onEditSummary,
 }: VideoSectionProps): React.JSX.Element {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean>(defaultOpen);
   const date = new Date(createdAt).toLocaleDateString("de-DE", {
     day: "2-digit",
     month: "2-digit",
@@ -243,10 +246,18 @@ function VideoSection({
   );
 }
 
+function parseExpandParam(value: string | null): number | null {
+  if (value === null) return null;
+  const n = Number(value);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
 export default function HistoryPage(): React.JSX.Element {
   const { videos, isLoading, error, refetch } = useHistory();
   const { folders } = useFolders();
   const { tags, create: createTag } = useTags();
+  const [searchParams] = useSearchParams();
+  const expandedVideoId = parseExpandParam(searchParams.get("expand"));
 
   async function handleMoveFlashcard(flashcardId: number, folderId: number | null): Promise<void> {
     await updateFlashcard(flashcardId, { folder_id: folderId });
@@ -330,6 +341,7 @@ export default function HistoryPage(): React.JSX.Element {
             key={video.id}
             title={video.title}
             createdAt={video.created_at}
+            defaultOpen={video.id === expandedVideoId}
             flashcards={video.flashcards}
             summaries={video.summaries}
             folders={folders}

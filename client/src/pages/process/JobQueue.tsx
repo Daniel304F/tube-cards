@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   AlertCircle,
   CheckCircle2,
@@ -166,9 +167,7 @@ function JobRow({ job, onRemove }: JobRowProps): React.JSX.Element {
     >
       <StatusBadge status={job.status} />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-text-base dark:text-dark-text truncate">
-          {job.youtube_url}
-        </p>
+        <JobUrl job={job} />
         {job.error && (
           <p className="mt-1 text-xs text-red-600 dark:text-red-400 break-words">
             {job.error}
@@ -194,6 +193,31 @@ function JobRow({ job, onRemove }: JobRowProps): React.JSX.Element {
         </button>
       )}
     </li>
+  );
+}
+
+interface JobUrlProps {
+  job: JobData;
+}
+
+function JobUrl({ job }: JobUrlProps): React.JSX.Element {
+  const baseClass = "text-sm font-medium truncate block";
+
+  if (job.status === "done" && job.video_id !== null) {
+    return (
+      <Link
+        to={`/history?expand=${job.video_id}`}
+        className={`${baseClass} text-brand hover:underline`}
+      >
+        {job.youtube_url}
+      </Link>
+    );
+  }
+
+  return (
+    <p className={`${baseClass} text-text-base dark:text-dark-text`}>
+      {job.youtube_url}
+    </p>
   );
 }
 
