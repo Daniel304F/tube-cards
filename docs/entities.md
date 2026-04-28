@@ -236,3 +236,7 @@ Before adding a field, ask:
   history-preservation becomes a requirement later, add a `generation: int`
   field to `Flashcard`/`Summary` (or a new `VideoGeneration` entity) — both
   paths are open since today's regenerate doesn't write any historical breadcrumb.
+- **2026-04-28** — Anki export (no entity change). `POST /export/anki` reads
+  `Flashcard` rows by id and emits a binary `.apkg` file. `Summary` rows in the
+  request are silently skipped (Anki has no native summary concept). Stable
+  deck id (`2059400110`) means re-imports merge instead of duplicating.
