@@ -79,3 +79,8 @@ export async function fetchVideoById(id: number): Promise<VideoData> {
   const response = await client.get<VideoData>(`/videos/${id}`);
   return response.data;
 }
+
+export async function regenerateVideo(id: number): Promise<VideoProcessResult> {
+  const response = await client.post<VideoProcessResult>(`/videos/${id}/regenerate`);
+  return response.data;
+}

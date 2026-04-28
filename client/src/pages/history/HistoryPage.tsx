@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Clock, BookOpen, FileText, ChevronDown, ChevronRight, AlertCircle, Loader2, Upload } from "lucide-react";
+import { Clock, BookOpen, FileText, ChevronDown, ChevronRight, AlertCircle, Loader2, RotateCcw, Upload } from "lucide-react";
 import { useHistory } from "../../hooks/useHistory";
 import { useFolders } from "../../hooks/useFolders";
 import { useTags } from "../../hooks/useTags";
@@ -11,6 +11,7 @@ import { EditableText } from "../../components/editable-text";
 import { exportToNotion, exportToRemnote } from "../../api/exports";
 import { updateFlashcard } from "../../api/flashcards";
 import { updateSummary } from "../../api/summaries";
+import { regenerateVideo } from "../../api/videos";
 import { attachTag, detachTag, type TagData } from "../../api/tags";
 import type { FlashcardData, SummaryData } from "../../api/videos";
 import type { FolderData } from "../../api/folders";
@@ -100,8 +101,63 @@ function ExportButtons({ flashcardIds, summaryIds }: ExportButtonsProps): React.
   );
 }
 
+interface RegenerateButtonProps {
+  videoId: number;
+  onDone: () => Promise<void>;
+}
+
+function RegenerateButton({ videoId, onDone }: RegenerateButtonProps): React.JSX.Element {
+  const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleClick(): Promise<void> {
+    setIsRegenerating(true);
+    setError(null);
+    try {
+      await regenerateVideo(videoId);
+      await onDone();
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const detail = err.response?.data?.detail;
+        setError(typeof detail === "string" ? detail : "Regenerate failed.");
+      } else {
+        setError("Regenerate failed.");
+      }
+    } finally {
+      setIsRegenerating(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={() => void handleClick()}
+        disabled={isRegenerating}
+        title="Replace all flashcards & summary with a fresh LLM run"
+        className="
+          inline-flex items-center gap-1.5
+          rounded-md border border-border dark:border-dark-border bg-white dark:bg-dark-card
+          px-3 py-1.5
+          text-xs font-medium text-text-base dark:text-dark-text
+          transition-colors hover:bg-brand-surface dark:hover:bg-dark-surface
+          disabled:opacity-50
+          min-h-[36px]
+        "
+      >
+        {isRegenerating ? <Loader2 className="size-3 animate-spin" /> : <RotateCcw className="size-3" />}
+        Regenerate
+      </button>
+      {error && (
+        <span className="text-xs text-red-600 dark:text-red-400">{error}</span>
+      )}
+    </div>
+  );
+}
+
 interface VideoSectionProps {
   title: string;
+  videoId: number;
   createdAt: string;
   defaultOpen?: boolean;
   flashcards: FlashcardData[];
@@ -115,10 +171,12 @@ interface VideoSectionProps {
   onCreateTag: (name: string) => Promise<TagData>;
   onEditFlashcard: (flashcardId: number, data: { question: string; answer: string }) => Promise<void>;
   onEditSummary: (summaryId: number, content: string) => Promise<void>;
+  onRegenerated: () => Promise<void>;
 }
 
 function VideoSection({
   title,
+  videoId,
   createdAt,
   defaultOpen = false,
   flashcards,
@@ -132,6 +190,7 @@ function VideoSection({
   onCreateTag,
   onEditFlashcard,
   onEditSummary,
+  onRegenerated,
 }: VideoSectionProps): React.JSX.Element {
   const [isOpen, setIsOpen] = useState<boolean>(defaultOpen);
   const date = new Date(createdAt).toLocaleDateString("de-DE", {
@@ -169,11 +228,9 @@ function VideoSection({
 
       {isOpen && (
         <div className="border-t border-border dark:border-dark-border px-5 py-4 space-y-6">
-          {/* Export buttons */}
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-text-muted dark:text-dark-muted uppercase tracking-wide">
-              Export
-            </span>
+          {/* Actions */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <RegenerateButton videoId={videoId} onDone={onRegenerated} />
             <ExportButtons
               flashcardIds={flashcards.map((fc) => fc.id)}
               summaryIds={summaries.map((s) => s.id)}
@@ -340,6 +397,7 @@ export default function HistoryPage(): React.JSX.Element {
           <VideoSection
             key={video.id}
             title={video.title}
+            videoId={video.id}
             createdAt={video.created_at}
             defaultOpen={video.id === expandedVideoId}
             flashcards={video.flashcards}
@@ -353,6 +411,7 @@ export default function HistoryPage(): React.JSX.Element {
             onCreateTag={handleCreateTag}
             onEditFlashcard={handleEditFlashcard}
             onEditSummary={handleEditSummary}
+            onRegenerated={refetch}
           />
         ))}
       </div>
