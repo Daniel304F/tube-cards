@@ -26,7 +26,10 @@
       "mcp__playwright__browser_snapshot",
       "mcp__playwright__browser_click",
       "mcp__playwright__browser_take_screenshot",
-      "Bash(curl -s -o /dev/null -w \"API jobs endpoint: %{http_code}\\\\n\" http://localhost:8000/jobs/)"
+      "Bash(curl -s -o /dev/null -w \"API jobs endpoint: %{http_code}\\\\n\" http://localhost:8000/jobs/)",
+      "Bash(python -m pytest --tb=no -q)",
+      "Bash(.venv/Scripts/python.exe -m pytest --tb=no -q)",
+      "Bash(npx vitest *)"
     ]
   }
 }
