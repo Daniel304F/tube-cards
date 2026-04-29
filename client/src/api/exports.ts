@@ -29,3 +29,15 @@ export async function exportToAnki(flashcardIds: number[]): Promise<Blob> {
   );
   return response.data;
 }
+
+export async function exportToMarkdown(
+  flashcardIds: number[],
+  summaryIds: number[],
+): Promise<Blob> {
+  const response = await client.post<Blob>(
+    "/export/markdown",
+    { flashcard_ids: flashcardIds, summary_ids: summaryIds },
+    { responseType: "blob" },
+  );
+  return response.data;
+}

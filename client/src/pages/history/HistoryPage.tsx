@@ -8,7 +8,7 @@ import { FlashcardCard } from "../../components/flashcard-card";
 import { FolderPicker } from "../../components/folder-picker";
 import { TagPicker } from "../../components/tag-picker";
 import { EditableText } from "../../components/editable-text";
-import { exportToAnki, exportToNotion, exportToRemnote } from "../../api/exports";
+import { exportToAnki, exportToMarkdown, exportToNotion, exportToRemnote } from "../../api/exports";
 import { updateFlashcard } from "../../api/flashcards";
 import { updateSummary } from "../../api/summaries";
 import { regenerateVideo } from "../../api/videos";
@@ -17,6 +17,7 @@ import type { FlashcardData, SummaryData } from "../../api/videos";
 import { triggerBlobDownload } from "../../lib/download";
 
 const ANKI_FILENAME = "tubecards-export.apkg";
+const MARKDOWN_FILENAME = "tubecards-export.md";
 import type { FolderData } from "../../api/folders";
 import axios from "axios";
 
@@ -107,7 +108,23 @@ function ExportButtons({ flashcardIds, summaryIds }: ExportButtonsProps): React.
     }
   }
 
+  async function handleMarkdownExport(): Promise<void> {
+    setExporting("markdown");
+    setMessage(null);
+    try {
+      const blob = await exportToMarkdown(flashcardIds, summaryIds);
+      triggerBlobDownload(blob, MARKDOWN_FILENAME);
+      const total = flashcardIds.length + summaryIds.length;
+      setMessage(`Downloaded ${total} item${total === 1 ? "" : "s"} as ${MARKDOWN_FILENAME}.`);
+    } catch (err: unknown) {
+      setMessage(_detailFromError(err, "Markdown export failed."));
+    } finally {
+      setExporting(null);
+    }
+  }
+
   const isAny = exporting !== null;
+  const hasNothingToExport = flashcardIds.length === 0 && summaryIds.length === 0;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -128,6 +145,12 @@ function ExportButtons({ flashcardIds, summaryIds }: ExportButtonsProps): React.
         isLoading={exporting === "anki"}
         disabled={isAny || flashcardIds.length === 0}
         onClick={() => void handleAnkiExport()}
+      />
+      <ExportButton
+        label="Markdown"
+        isLoading={exporting === "markdown"}
+        disabled={isAny || hasNothingToExport}
+        onClick={() => void handleMarkdownExport()}
       />
       {message && (
         <span className="text-xs text-text-muted dark:text-dark-muted">{message}</span>
