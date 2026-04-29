@@ -5,6 +5,7 @@ from sqlmodel import Session
 from database import get_session
 from schemas.export import ExportRequest, ExportResponse
 from services import anki as anki_service
+from services import markdown as markdown_service
 from services import notion as notion_service
 from services import remnote as remnote_service
 from core.config import settings
@@ -12,6 +13,7 @@ from core.config import settings
 router = APIRouter(prefix="/export", tags=["export"])
 
 ANKI_FILENAME = "tubecards-export.apkg"
+MARKDOWN_FILENAME = "tubecards-export.md"
 
 
 @router.post("/notion", response_model=ExportResponse)
@@ -65,4 +67,21 @@ async def export_to_anki(
         content=apkg_bytes,
         media_type="application/octet-stream",
         headers={"Content-Disposition": f'attachment; filename="{ANKI_FILENAME}"'},
+    )
+
+
+@router.post("/markdown")
+async def export_to_markdown(
+    data: ExportRequest,
+    session: Session = Depends(get_session),
+) -> Response:
+    """Render flashcards + summaries as a single Markdown file download.
+
+    Unlike Anki, summaries ARE included — Markdown can represent both natively.
+    """
+    md_bytes = markdown_service.export(session, data.flashcard_ids, data.summary_ids)
+    return Response(
+        content=md_bytes,
+        media_type=markdown_service.MARKDOWN_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="{MARKDOWN_FILENAME}"'},
     )

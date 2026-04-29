@@ -36,7 +36,9 @@
       "Bash(.venv/Scripts/python.exe -m pip install genanki)",
       "Bash(.venv/Scripts/python.exe -m pytest tests/test_exports.py -v --tb=short)",
       "Bash(.venv/Scripts/python.exe -m pytest tests/test_exports.py -v --tb=line)",
-      "Bash(python -m pytest tests/test_exports.py -x)"
+      "Bash(python -m pytest tests/test_exports.py -x)",
+      "Bash(python -m pytest tests/test_exports.py)",
+      "Bash(python -m pytest)"
     ]
   }
 }
