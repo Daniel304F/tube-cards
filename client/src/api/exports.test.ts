@@ -6,7 +6,7 @@ vi.mock("./client", () => ({
   default: { post: (...args: unknown[]) => postMock(...args) },
 }));
 
-import { exportToAnki } from "./exports";
+import { exportToAnki, exportToMarkdown } from "./exports";
 
 describe("exportToAnki", () => {
   beforeEach(() => {
@@ -31,6 +31,34 @@ describe("exportToAnki", () => {
     postMock.mockResolvedValueOnce({ data: blob });
 
     const result = await exportToAnki([7]);
+
+    expect(result).toBe(blob);
+  });
+});
+
+describe("exportToMarkdown", () => {
+  beforeEach(() => {
+    postMock.mockReset();
+  });
+
+  it("posts to /export/markdown with both flashcard and summary ids and requests a blob", async () => {
+    const blob = new Blob(["# md"], { type: "text/markdown" });
+    postMock.mockResolvedValueOnce({ data: blob });
+
+    await exportToMarkdown([1, 2], [9]);
+
+    expect(postMock).toHaveBeenCalledWith(
+      "/export/markdown",
+      { flashcard_ids: [1, 2], summary_ids: [9] },
+      { responseType: "blob" },
+    );
+  });
+
+  it("returns the response payload as a Blob", async () => {
+    const blob = new Blob(["# md"], { type: "text/markdown" });
+    postMock.mockResolvedValueOnce({ data: blob });
+
+    const result = await exportToMarkdown([1], [2]);
 
     expect(result).toBe(blob);
   });

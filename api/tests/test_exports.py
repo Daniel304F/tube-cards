@@ -1,4 +1,4 @@
-"""Tests for /export router + notion/remnote/anki services."""
+"""Tests for /export router + notion/remnote/anki/markdown services."""
 import zipfile
 from io import BytesIO
 from unittest.mock import MagicMock, patch
@@ -11,6 +11,7 @@ from sqlmodel import Session
 
 from core.config import settings
 from services import anki as anki_service
+from services import markdown as markdown_service
 from services import notion as notion_service
 from services import remnote as remnote_service
 
@@ -216,6 +217,127 @@ class TestAnkiRouter:
     def test_endpoint_422_for_empty_flashcards(self, client: TestClient) -> None:
         response = client.post(
             "/export/anki", json={"flashcard_ids": [], "summary_ids": []}
+        )
+
+        assert response.status_code == 422
+
+
+class TestMarkdownService:
+    def test_returns_bytes_starting_with_video_header(
+        self, session: Session, make_video, make_flashcard
+    ) -> None:
+        v = make_video(title="Intro to Rust")
+        fc = make_flashcard(v.id, question="What is ownership?", answer="A core concept.")
+
+        data = markdown_service.export(session, [fc.id], [])
+
+        assert isinstance(data, bytes)
+        text = data.decode("utf-8")
+        assert text.startswith("# Intro to Rust")
+
+    def test_includes_flashcard_question_and_answer(
+        self, session: Session, make_video, make_flashcard
+    ) -> None:
+        v = make_video()
+        fc = make_flashcard(v.id, question="Q-UNIQUE-123", answer="A-UNIQUE-456")
+
+        text = markdown_service.export(session, [fc.id], []).decode("utf-8")
+
+        assert "Q-UNIQUE-123" in text
+        assert "A-UNIQUE-456" in text
+
+    def test_includes_summary_content(
+        self, session: Session, make_video, make_summary
+    ) -> None:
+        v = make_video()
+        s = make_summary(v.id, content="SUMMARY-MARKER-789")
+
+        text = markdown_service.export(session, [], [s.id]).decode("utf-8")
+
+        assert "SUMMARY-MARKER-789" in text
+
+    def test_groups_flashcards_under_their_video(
+        self,
+        session: Session,
+        make_video,
+        make_flashcard,
+    ) -> None:
+        """Cards from two different videos render under each video's H1, not interleaved."""
+        v1 = make_video(title="Video One")
+        v2 = make_video(title="Video Two")
+        fc_a = make_flashcard(v1.id, question="QA", answer="AA")
+        fc_b = make_flashcard(v2.id, question="QB", answer="AB")
+
+        text = markdown_service.export(session, [fc_a.id, fc_b.id], []).decode("utf-8")
+
+        idx_v1 = text.index("# Video One")
+        idx_qa = text.index("QA")
+        idx_v2 = text.index("# Video Two")
+        idx_qb = text.index("QB")
+        # QA appears between Video One and Video Two; QB appears after Video Two.
+        assert idx_v1 < idx_qa < idx_v2 < idx_qb
+
+    def test_404_for_unknown_flashcard(self, session: Session) -> None:
+        with pytest.raises(HTTPException) as exc:
+            markdown_service.export(session, [9999], [])
+
+        assert exc.value.status_code == 404
+
+    def test_404_for_unknown_summary(self, session: Session) -> None:
+        with pytest.raises(HTTPException) as exc:
+            markdown_service.export(session, [], [9999])
+
+        assert exc.value.status_code == 404
+
+    def test_empty_lists_raises_422(self, session: Session) -> None:
+        with pytest.raises(HTTPException) as exc:
+            markdown_service.export(session, [], [])
+
+        assert exc.value.status_code == 422
+
+
+class TestMarkdownRouter:
+    def test_endpoint_returns_markdown_download(
+        self, client: TestClient, make_video, make_flashcard
+    ) -> None:
+        v = make_video(title="My Video")
+        fc = make_flashcard(v.id, question="Hello?", answer="World.")
+
+        response = client.post(
+            "/export/markdown",
+            json={"flashcard_ids": [fc.id], "summary_ids": []},
+        )
+
+        assert response.status_code == 200
+        text = response.content.decode("utf-8")
+        assert text.startswith("# My Video")
+        assert "Hello?" in text
+        assert "World." in text
+
+        ctype = response.headers.get("content-type", "")
+        assert "markdown" in ctype.lower() or "octet-stream" in ctype
+        disposition = response.headers.get("content-disposition", "")
+        assert "attachment" in disposition.lower()
+        assert ".md" in disposition.lower()
+
+    def test_endpoint_includes_summaries(
+        self, client: TestClient, make_video, make_summary
+    ) -> None:
+        """Unlike Anki, markdown export DOES include summaries."""
+        v = make_video()
+        s = make_summary(v.id, content="SUMMARY-IN-MARKDOWN")
+
+        response = client.post(
+            "/export/markdown",
+            json={"flashcard_ids": [], "summary_ids": [s.id]},
+        )
+
+        assert response.status_code == 200
+        assert "SUMMARY-IN-MARKDOWN" in response.content.decode("utf-8")
+
+    def test_endpoint_422_for_empty_request(self, client: TestClient) -> None:
+        response = client.post(
+            "/export/markdown", json={"flashcard_ids": [], "summary_ids": []}
         )
 
         assert response.status_code == 422
