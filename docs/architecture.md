@@ -103,7 +103,7 @@ No cloud services are required except external APIs (YouTube, LLM providers, Not
 | `tags.py`          | `/tags`        | `tag.py`             | CRUD on tags, attach/detach to cards     |
 | `search.py`        | `/search`      | `search.py`          | Search across cards/summaries            |
 | `study.py`         | `/study`       | `study.py`           | SM-2 spaced repetition                   |
-| `exports.py`       | `/exports`     | `notion.py`, `remnote.py` | Push internal data to external apps |
+| `exports.py`       | `/export`      | `notion.py`, `remnote.py`, `anki.py`, `markdown.py` | Push (Notion/Remnote) or download (Anki/Markdown) |
 | `config.py`        | `/config`      | `config.py`          | Read/write app settings                  |
 
 Plus `services/transcript.py` (YouTube transcript fetching) and `services/llm.py`

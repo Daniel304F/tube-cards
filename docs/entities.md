@@ -240,3 +240,9 @@ Before adding a field, ask:
   `Flashcard` rows by id and emits a binary `.apkg` file. `Summary` rows in the
   request are silently skipped (Anki has no native summary concept). Stable
   deck id (`2059400110`) means re-imports merge instead of duplicating.
+- **2026-04-29** — Markdown export (no entity change). `POST /export/markdown`
+  reads `Flashcard` and `Summary` rows by id and emits a single `.md` download
+  (`text/markdown; charset=utf-8`). Output is **grouped by `Video`** — cards
+  from the same video render under one `# Video Title` heading regardless of
+  the order ids arrive in. Unlike Anki, summaries ARE included (`## Summary`
+  block); a request with only `summary_ids` is valid. Both lists empty → 422.
